@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "module": "CommonJS",
+    "target": "ES2019",
+    "moduleResolution": "Node",
+    "noImplicitAny": true,
+    "sourceMap": false,
+    "outDir": "./dist",
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "allowJs": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*.ts", "*.ts"],
+  "exclude": ["dist", "node_modules"]
+}

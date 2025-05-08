@@ -1,0 +1,70 @@
+{
+  "name": "vco-okpos-agent",
+  "version": "1.0.0",
+  "description": "VCO OKPOS Agent for FAI",
+  "author": "FAI",
+  "scripts": {
+    "transpile": "rimraf \"dist\" && tsc && xcopy \"src\\dll\" \"dist\\src\\dll\" /Y /i",
+    "start": "yarn transpile && electron .",
+    "build": "yarn transpile && rimraf \"build\" && electron-builder && echo 1234 > build/config.txt"
+  },
+  "main": "dist/main.js",
+  "packageManager": "yarn@1.22.22",
+  "dependencies": {
+    "axios": "^1.9.0",
+    "body-parser": "^2.2.0",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "koffi": "^2.9.1",
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/body-parser": "^1.19.5",
+    "@types/express": "^5.0.1",
+    "electron": "33.0.2",
+    "electron-builder": "^25",
+    "electron-rebuild": "^3.2.9",
+    "rimraf": "^6.0.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "build": {
+    "appId": "ai.fainders.vcookposagent",
+    "productName": "FAI VCO OKPOS Agent",
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "build"
+    },
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/koffi/build/koffi",
+      "dist/src/dll/*.dll",
+      "dist/src/dllProcess"
+    ],
+    "extraResources": [
+      {
+        "from": "src/assets",
+        "to": "assets"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "ia32"
+          ]
+        }
+      ],
+      "icon": "src/assets/app-icon.png"
+    }
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "electron": ">=33.0.0"
+  }
+}
