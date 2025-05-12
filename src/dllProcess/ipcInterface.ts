@@ -24,6 +24,9 @@ export type InterProcessMessage =
   | {
       type: "log-error" | "log-info" | "log-debug";
       data: (string | object)[];
+    }
+  | {
+      type: "ping";
     };
 
 export const sendMessageToParent = (message: InterProcessMessage) => {

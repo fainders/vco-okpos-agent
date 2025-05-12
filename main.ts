@@ -14,6 +14,10 @@ const isPrd = app.isPackaged === true;
 let dllProcess: ChildProcess | null = null;
 let shouldRestartDllProcess = true;
 let isDialogOpen = false;
+let tray: Tray | null = null;
+let lastDllProcessCheckTime = 0;
+let trayStatus: "connected" | "disconnected" = "connected";
+const PING_TIMEOUT_MS = 15000;
 
 try {
   checkConfig();
@@ -24,8 +28,8 @@ try {
     dialog
       .showMessageBox({
         type: "error",
-        title: "Configuration Error",
-        message: `Error in checkConfig: ${error.message}`,
+        title: "설정 오류",
+        message: `설정이 완료되지 않았습니다. ${error.message}`,
         buttons: ["OK"],
       })
       .then(() => {
@@ -97,6 +101,11 @@ function startDllProcess() {
     ) {
       return; // messageToDll에서 처리
     }
+    if (response.type === "ping") {
+      const currentTime = Date.now();
+      lastDllProcessCheckTime = currentTime;
+      return;
+    }
     if (response?.type !== "callback") {
       logger.warn("[Electron] Invalid message type:", response.type);
       return;
@@ -122,24 +131,38 @@ function startDllProcess() {
   dllProcess.on("exit", (code) => {
     logger.warn(`[Electron] DLL process exited with code ${code}`);
     if (!isDialogOpen) {
-      isDialogOpen = true;
-      dialog
-        .showMessageBox({
-          type: "warning",
-          title: "DLL Crash",
-          message: `DLL process exited with code ${code}`,
-          buttons: ["OK"],
-        })
-        .then(() => {
-          isDialogOpen = false;
-        });
+      if (code === 4294967295) {
+        isDialogOpen = true;
+        dialog
+          .showMessageBox({
+            type: "error",
+            title: "DLL 크래시",
+            message: `OKPOS이 연결되었는지 확인해 주세요.`,
+            buttons: ["OK"],
+          })
+          .then(() => {
+            isDialogOpen = false;
+          });
+        // } else {
+        //   isDialogOpen = true;
+        //   dialog
+        //     .showMessageBox({
+        //       type: "warning",
+        //       title: "DLL Crash",
+        //       message: `DLL process exited with code ${code}`,
+        //       buttons: ["OK"],
+        //     })
+        //     .then(() => {
+        //       isDialogOpen = false;
+        //     });
+      }
     }
     dllProcess = null;
     if (shouldRestartDllProcess) {
       setTimeout(() => {
         logger.info("[Electron] Restarting DLL process...");
         startDllProcess();
-      }, 3000);
+      }, 5000);
     } else {
       logger.info("[Electron] DLL process will not be restarted.");
     }
@@ -165,8 +188,7 @@ app.on("ready", () => {
       : path.join(__dirname, "assets", "app-icon.png"); // dev 모드 경로
 
     const trayIcon = nativeImage.createFromPath(iconPath);
-    const tray = new Tray(trayIcon);
-    tray.setToolTip("FAI VCO OKPOS Agent is running");
+    tray = new Tray(trayIcon);
     tray.setContextMenu(
       Menu.buildFromTemplate([{ label: "종료", click: () => app.quit() }])
     );
@@ -205,6 +227,36 @@ process.on("SIGTERM", () => {
   process.exit(0);
 });
 
+setInterval(() => {
+  const currentTime = Date.now();
+  const delay = currentTime - lastDllProcessCheckTime;
+  if (delay > PING_TIMEOUT_MS) {
+    if (trayStatus === "connected") {
+      trayStatus = "disconnected";
+      const iconPath = isPrd
+        ? path.join(process.resourcesPath, "assets", "app-icon-negative.png")
+        : path.join(__dirname, "assets", "app-icon-negative.png"); // dev 모드 경로
+
+      // const trayIcon = nativeImage.createFromPath(iconPath);
+      // tray = new Tray(trayIcon);
+      tray.setImage(iconPath);
+      tray?.setToolTip("FAI VCO OKPOS Agent 연결 끊김");
+    }
+  } else {
+    if (trayStatus === "disconnected") {
+      trayStatus = "connected";
+      const iconPath = isPrd
+        ? path.join(process.resourcesPath, "assets", "app-icon.png")
+        : path.join(__dirname, "assets", "app-icon.png"); // dev 모드 경로
+
+      // const trayIcon = nativeImage.createFromPath(iconPath);
+      // tray = new Tray(trayIcon);
+      tray.setImage(iconPath);
+      tray?.setToolTip("FAI VCO OKPOS Agent가 실행 중입니다.");
+    }
+  }
+}, 5000);
+
 export const messageToDll = (message: object): Promise<object> => {
   return new Promise((resolve, reject) => {
     if (!dllProcess || !dllProcess.connected) {
@@ -236,7 +288,7 @@ export const messageToDll = (message: object): Promise<object> => {
     const timeout = setTimeout(() => {
       dllProcess.off("message", handler);
       reject(new Error("Timeout: No response from DLL within 5 seconds"));
-    }, 5000);
+    }, 10000);
 
     try {
       dllProcess.send(messageWithId);

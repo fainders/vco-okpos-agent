@@ -158,6 +158,10 @@ setInterval(() => {
         data: ["ping failed, exiting subprocess..."],
       });
       process.exit(-1);
+    } else {
+      sendMessageToParent({
+        type: "ping",
+      });
     }
   } catch (error) {
     sendMessageToParent({
