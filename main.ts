@@ -116,7 +116,7 @@ function startDllProcess() {
       }
       requestWithRetry(
         {
-          url: "okpos/callback",
+          url: "pos/okpos/callback",
           method: "POST",
           headers: {
             "Content-Type": "application/json",
