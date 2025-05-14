@@ -106,27 +106,36 @@ function startDllProcess() {
       lastDllProcessCheckTime = currentTime;
       return;
     }
-    if (response?.type !== "callback") {
-      logger.warn("[Electron] Invalid message type:", response.type);
+    if (response.type === "callback") {
+      let parsed: Serializable;
+      try {
+        parsed = JSON.parse(response.data);
+      } catch (error) {
+        logger.error("[Electron] Error parsing callback data:", error.message);
+        return;
+      }
+      requestWithRetry(
+        {
+          url: "okpos/callback",
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": API_KEY,
+          },
+          data: parsed,
+        },
+        3,
+        1000
+      ).catch((error) => {
+        logger.error(
+          "[Electron] Error sending callback to backend:",
+          error.message
+        );
+      });
       return;
     }
-    requestWithRetry(
-      {
-        url: "okpos/callback",
-        method: "POST",
-        headers: {
-          "x-api-key": API_KEY,
-        },
-        data: response.data,
-      },
-      3,
-      1000
-    ).catch((error) => {
-      logger.error(
-        "[Electron] Error sending callback to backend:",
-        error.message
-      );
-    });
+    logger.warn("[Electron] Invalid message type:", response.type);
+    return;
   });
   dllProcess.on("exit", (code) => {
     logger.warn(`[Electron] DLL process exited with code ${code}`);
