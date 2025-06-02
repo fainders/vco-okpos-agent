@@ -1,23 +1,40 @@
-import { app, dialog, Menu, nativeImage, Tray } from "electron";
+import {
+  app,
+  dialog,
+  Menu,
+  nativeImage,
+  powerSaveBlocker,
+  Tray,
+} from "electron";
 import { ChildProcess, fork, Serializable, spawn } from "child_process";
 import path from "path";
 import { logger } from "./src/logger";
 import config from "./config";
 import dotenv from "dotenv";
 import { API_KEY, checkConfig } from "./src/configInfo";
-import { setupServer } from "./src/server";
 import { InterProcessMessage } from "./src/dllProcess/ipcInterface";
 import { requestWithRetry } from "./src/axiosInstance";
+import { setUpPollingPendingCommands } from "./src/setupPolling";
 dotenv.config();
 const isPrd = app.isPackaged === true;
 
 let dllProcess: ChildProcess | null = null;
 let shouldRestartDllProcess = true;
+
+// polling을 위한 변수
+
+let stopPolling: (() => void) | null = null;
+
+// ui 변수
 let isDialogOpen = false;
 let tray: Tray | null = null;
 let lastDllProcessCheckTime = 0;
 let trayStatus: "connected" | "disconnected" = "connected";
+
+// DLL 프로세스가 응답하지 않는 경우의 타임아웃 시간 (ms)
 const PING_TIMEOUT_MS = 15000;
+// 절전모드에서 작동하도록 설정
+const blockerId = powerSaveBlocker.start("prevent-app-suspension");
 
 try {
   checkConfig();
@@ -215,24 +232,28 @@ app.on("ready", () => {
         app.quit();
       });
   }
-  setupServer();
+  stopPolling = setUpPollingPendingCommands(messageToDll);
   startDllProcess();
 });
 
 app.on("before-quit", () => {
   logger.info("[Electron] App is quitting. Stopping DLL process...");
+  powerSaveBlocker.stop(blockerId);
   stopDllProcess();
+  stopPolling?.();
 });
 
 process.on("SIGINT", () => {
   logger.info("SIGINT received, exiting...");
   stopDllProcess();
+  stopPolling?.();
   process.exit(0);
 });
 
 process.on("SIGTERM", () => {
   logger.info("SIGTERM received, exiting...");
   stopDllProcess();
+  stopPolling?.();
   process.exit(0);
 });
 

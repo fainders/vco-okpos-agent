@@ -9,8 +9,9 @@ const instance = axios.create({
 
 instance.interceptors.request.use((config) => {
   logger.debug(
-    `[Axios] Sending request: ${config.method?.toUpperCase()} ${config.url}`,
-    config
+    `[Axios] Sending request: ${config.method?.toUpperCase()} ${
+      config.baseURL
+    }${config.url} x-api-key: ${config.headers?.["x-api-key"]}`
   );
   return config;
 });
@@ -18,7 +19,7 @@ instance.interceptors.request.use((config) => {
 instance.interceptors.response.use(
   (response) => {
     logger.debug(
-      `[Axios] Received response: ${response.status} ${response.config.url}`,
+      `[Axios] Received response: ${response.status} ${response.config.baseURL}${response.config.url}`,
       response.data
     );
     return response;

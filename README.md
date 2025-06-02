@@ -7,7 +7,7 @@ callback이 생기면 그대로 ERP_URL/okpos/callback으로 request
 `yarn install`로 의존성 설치
 안될경우 `set NODE_OPTIONS=--max-old-space-size=8192`
 
-환경변수는 config.ts에 관리하므로 변경이 필요할 시 해당 파일 수정(erp 주소 / POS 연동 번호호)
+환경변수는 config.ts에 관리하므로 변경이 필요할 시 해당 파일 수정(erp 주소 / POS 연동 번호)
 build시 해당 파일의 내용이 그대로 들어가 exe 파일에 포함됨
 
 빌드 완료된 후 build폴더의 모든 파일들은 함께 옮겨져야 무설치(portable)로 실행할 수 있음

@@ -9,7 +9,8 @@ dotenv.config();
 
 // Config values
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
-const APP_DIR = process.env.PORTABLE_EXECUTABLE_DIR || process.cwd();
+const APP_DIR =
+  process.env.PORTABLE_EXECUTABLE_DIR || path.join(__dirname, "..", "..");
 const ERP_URL = config.ERP_URL;
 const EXTERNAL_CODE = config.EXTERNAL_CODE;
 const configPath = path.join(APP_DIR, "config.txt");
