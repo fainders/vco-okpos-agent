@@ -56,6 +56,9 @@ try {
 }
 
 function startDllProcess() {
+  const nodePath = isPrd
+    ? path.join(process.resourcesPath, "package", "node.exe")
+    : path.join(__dirname, "package", "node.exe"); // node.exe 경로 설정
   const processPath = isPrd
     ? path.join(
         process.resourcesPath,
@@ -66,7 +69,7 @@ function startDllProcess() {
         "okpos-process.js"
       )
     : path.join(__dirname, "src", "dllProcess", "okpos-process.js");
-  dllProcess = spawn("node", [processPath], {
+  dllProcess = spawn(nodePath, [processPath], {
     stdio: ["pipe", "pipe", "pipe", "ipc"],
     env: {
       ...process.env,

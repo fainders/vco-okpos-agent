@@ -4,7 +4,7 @@
   "description": "VCO OKPOS Agent for FAI",
   "author": "FAI",
   "scripts": {
-    "transpile": "rimraf \"dist\" && tsc && xcopy \"src\\dll\" \"dist\\src\\dll\" /Y /i && xcopy \"src\\assets\" \"dist\\assets\" /Y /i",
+    "transpile": "rimraf \"dist\" && tsc && xcopy \"src\\dll\" \"dist\\src\\dll\" /Y /i && xcopy \"src\\assets\" \"dist\\assets\" /Y /i && xcopy \"src\\package\" \"dist\\package\" /Y /i",
     "start": "yarn transpile && echo 1234 > config.txt && electron .",
     "build": "yarn transpile && rimraf \"build\" && electron-builder && echo 1234 > build/config.txt"
   },
@@ -49,6 +49,10 @@
       {
         "from": "src/assets",
         "to": "assets"
+      },
+      {
+        "from": "src/package",
+        "to": "package"
       }
     ],
     "win": {
