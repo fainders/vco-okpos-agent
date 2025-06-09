@@ -1,6 +1,7 @@
 import { isAxiosError } from "axios";
 import { requestWithRetry } from "./axiosInstance";
 import { API_KEY } from "./configInfo";
+import { logger } from "./logger";
 
 interface PendingCommand {
   id: string;
@@ -57,21 +58,19 @@ export const setUpPollingPendingCommands = (
     const command = getTopPendingCommand();
     if (!command) return;
     isProcessing = true;
-    console.log("Processing command:", command);
     try {
       const payload = JSON.parse(command.payload); // payload를 JSON으로 파싱
       const result = await sendToDll(payload);
       try {
-        console.log("Command processed successfully:", command.id);
         await ackCommand(command.id, {
           success: true,
           data: result,
         }); // 명령어 처리 후 ACK
       } catch (ackError) {
-        console.error("Error acknowledging command:", command.id, ackError);
+        logger.error("Error acknowledging command:", command.id, ackError);
       }
     } catch (error) {
-      console.error("Error sending to DLL:", error);
+      logger.error("Error sending to DLL:", error);
       const errorPayload = JSON.parse(error?.message || "{}");
       await ackCommand(command.id, {
         success: false,
