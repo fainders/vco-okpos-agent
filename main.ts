@@ -11,6 +11,7 @@ import path from "path";
 import { logger } from "./src/logger";
 import config from "./config";
 import dotenv from "dotenv";
+import iconv from "iconv-lite";
 import { API_KEY, checkConfig } from "./src/configInfo";
 import { InterProcessMessage } from "./src/dllProcess/ipcInterface";
 import { requestWithRetry } from "./src/axiosInstance";
@@ -299,8 +300,11 @@ export const messageToDll = (message: object): Promise<object> => {
     }
 
     const requestId = Math.random().toString(36).substring(2, 15);
+    const encoded = iconv.encode(JSON.stringify(message), "euc-kr");
+    const encodedMessage = encoded.toString("utf-8");
+
     const messageWithId: InterProcessMessage = {
-      data: message,
+      data: JSON.parse(encodedMessage),
       id: requestId,
       type: "msg-request",
     };

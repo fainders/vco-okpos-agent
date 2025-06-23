@@ -1,6 +1,6 @@
 # vco-okpos-agent
 
-localhost:4010/send-to-dll에 데이터가 오면 그대로 OKDC.dll에 request
+ERP_URL로 5초마다 polling하여 request가 있는지 확인
 callback이 생기면 그대로 ERP_URL/okpos/callback으로 request
 
 32bit node 필요
@@ -8,6 +8,8 @@ callback이 생기면 그대로 ERP_URL/okpos/callback으로 request
 안될경우 `set NODE_OPTIONS=--max-old-space-size=8192`
 
 환경변수는 config.ts에 관리하므로 변경이 필요할 시 해당 파일 수정(erp 주소 / POS 연동 번호)
+ERP_URL로 5초마다 polling하여 request가 있는지 확인
+EXTERNAL_CODE가 있어야 callback함수를 등록할 수 있음
 build시 해당 파일의 내용이 그대로 들어가 exe 파일에 포함됨
 
 빌드 완료된 후 build폴더의 모든 파일들은 함께 옮겨져야 무설치(portable)로 실행할 수 있음
