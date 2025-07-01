@@ -38,7 +38,7 @@
       "package.json"
     ],
     "directories": {
-      "output": "build"
+      "output": "FAI VCO OKPOS Agent"
     },
     "asar": true,
     "asarUnpack": [

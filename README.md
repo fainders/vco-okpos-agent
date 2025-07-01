@@ -19,4 +19,12 @@ exe 파일 실행 전 exe파일 옆에 config.txt를 생성하고 API_KEY를 입
 
 - 코드 변경시 주의사항
   okpos-process.ts는 spawn으로 돌아가는 sub process이고 다른 파일의 의존성을 최소한으로 할것(의존성 파일들은 모두 package.json의 asarUnpack에 포함시켜야 함)
-  electron에 내장된 node로 spawn하려했으나, 끝내 해당 dll과 통신에 `code 3221225725`에러를 해결 할 수 없어 node 실행파일을 함께 패키징하였음음
+  electron에 내장된 node로 spawn하려했으나, 끝내 해당 dll과 통신에 `code 3221225725`에러를 해결 할 수 없어 node 실행파일을 함께 패키징하였음
+
+- TODO
+  dev/prd 빌드마다 서버주소 바뀌고 패키지 이름/폴더이름 바뀌도록 설정
+
+- 디버깅 팁
+  OKPOS 컴퓨터의 로그를 활용해야 함
+  C:\_OKPOS\CFG\LOG\OKDCAgent_yyyymmdd 파일을 참조하면 dll과 관련된 디버깅에 용이
+  C:\_OKPOS\CFG\OKPOS.ini 파일에 [AFFILIATE]부분에 도움이 되는 로그파일이 작성되는 위치가 있음

@@ -38,6 +38,33 @@ const responseCallback = koffi.register((lenData: number, data: string) => {
   }
 }, koffi.pointer(okposCallbackProto));
 
+const registerCallbackWithRetry = () => {
+  const response = registServerCallback(EXTERNAL_CODE, responseCallback);
+  if (response !== SUCCESS_RESPONSE) {
+    sendMessageToParent({
+      type: "log-error",
+      data: [
+        "registServerCallback failed: ",
+        response,
+        EXTERNAL_CODE,
+        responseCallback,
+      ],
+    });
+    setTimeout(() => {
+      sendMessageToParent({
+        type: "log-info",
+        data: ["Retrying to register callback..."],
+      });
+      registerCallbackWithRetry();
+    }, 30000);
+  } else {
+    sendMessageToParent({
+      type: "log-info",
+      data: ["registServerCallback success"],
+    });
+  }
+};
+
 export const backgroundProcess = async () => {
   sendMessageToParent({
     type: "log-debug",
@@ -55,14 +82,7 @@ export const backgroundProcess = async () => {
     type: "log-info",
     data: ["checkConnect success: ", response],
   });
-  response = registServerCallback(EXTERNAL_CODE, responseCallback);
-  if (response !== SUCCESS_RESPONSE) {
-    sendMessageToParent({
-      type: "log-error",
-      data: ["registServerCallback failed: ", response],
-    });
-    return process.exit(-1);
-  }
+  registerCallbackWithRetry();
 
   let done = false;
 

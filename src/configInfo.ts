@@ -16,7 +16,7 @@ const EXTERNAL_CODE = config.EXTERNAL_CODE;
 const configPath = path.join(APP_DIR, "config.txt");
 let API_KEY: string;
 if (fs.existsSync(configPath)) {
-  API_KEY = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+  API_KEY = fs.readFileSync(configPath, "utf-8").replace(/\r?\n|\r/g, "");
 }
 
 export function checkConfig(): void {

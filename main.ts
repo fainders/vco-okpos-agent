@@ -87,19 +87,19 @@ function startDllProcess() {
   });
   dllProcess.on("error", (error) => {
     logger.error("[Electron] DLL process error:", error);
-    if (!isDialogOpen) {
-      isDialogOpen = true;
-      dialog
-        .showMessageBox({
-          type: "error",
-          title: "DLL Error",
-          message: `DLL process error: ${error}`,
-          buttons: ["OK"],
-        })
-        .then(() => {
-          isDialogOpen = false;
-        });
-    }
+    // if (!isDialogOpen) {
+    //   isDialogOpen = true;
+    //   dialog
+    //     .showMessageBox({
+    //       type: "error",
+    //       title: "DLL Error",
+    //       message: `DLL process error: ${error}`,
+    //       buttons: ["OK"],
+    //     })
+    //     .then(() => {
+    //       isDialogOpen = false;
+    //     });
+    // }
   });
   dllProcess.on("message", (msg) => {
     const response = msg as InterProcessMessage;
@@ -160,33 +160,21 @@ function startDllProcess() {
   });
   dllProcess.on("exit", (code) => {
     logger.warn(`[Electron] DLL process exited with code ${code}`);
-    if (!isDialogOpen) {
-      if (code === 4294967295) {
-        isDialogOpen = true;
-        dialog
-          .showMessageBox({
-            type: "error",
-            title: "DLL 크래시",
-            message: `OKPOS이 연결되었는지 확인해 주세요.`,
-            buttons: ["OK"],
-          })
-          .then(() => {
-            isDialogOpen = false;
-          });
-        // } else {
-        //   isDialogOpen = true;
-        //   dialog
-        //     .showMessageBox({
-        //       type: "warning",
-        //       title: "DLL Crash",
-        //       message: `DLL process exited with code ${code}`,
-        //       buttons: ["OK"],
-        //     })
-        //     .then(() => {
-        //       isDialogOpen = false;
-        //     });
-      }
-    }
+    // if (!isDialogOpen) {
+    //   if (code === 4294967295) {
+    //     isDialogOpen = true;
+    //     dialog
+    //       .showMessageBox({
+    //         type: "error",
+    //         title: "DLL 크래시",
+    //         message: `OKPOS이 연결되었는지 확인해 주세요.`,
+    //         buttons: ["OK"],
+    //       })
+    //       .then(() => {
+    //         isDialogOpen = false;
+    //       });
+    //   }
+    // }
     dllProcess = null;
     if (shouldRestartDllProcess) {
       setTimeout(() => {
@@ -312,7 +300,7 @@ export const messageToDll = (message: object): Promise<object> => {
     const handler = (msg: InterProcessMessage) => {
       if (msg.type !== "msg-response" && msg.type !== "msg-error") return;
       if (msg.id !== requestId) return;
-      dllProcess.off("message", handler);
+      dllProcess?.off("message", handler);
       clearTimeout(timeout);
       if (msg.type === "msg-error") {
         return reject(new Error(msg.data));
@@ -323,14 +311,14 @@ export const messageToDll = (message: object): Promise<object> => {
     dllProcess.on("message", handler);
 
     const timeout = setTimeout(() => {
-      dllProcess.off("message", handler);
+      dllProcess?.off("message", handler);
       reject(new Error("Timeout: No response from DLL within 5 seconds"));
     }, 10000);
 
     try {
       dllProcess.send(messageWithId);
     } catch (err) {
-      dllProcess.off("message", handler);
+      dllProcess?.off("message", handler);
       clearTimeout(timeout);
       return reject(new Error("DLL process send failed"));
     }
