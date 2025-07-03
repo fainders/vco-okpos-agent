@@ -6,7 +6,7 @@
   "scripts": {
     "transpile": "rimraf \"dist\" && tsc && xcopy \"src\\dll\" \"dist\\src\\dll\" /Y /i && xcopy \"src\\assets\" \"dist\\assets\" /Y /i && xcopy \"src\\package\" \"dist\\package\" /Y /i",
     "start": "yarn transpile && echo 1234 > config.txt && electron .",
-    "build": "yarn transpile && rimraf \"build\" && electron-builder && echo 1234 > build/config.txt"
+    "build": "yarn transpile && rimraf \"FAI VCO OKPOS Agent\" && electron-builder && echo 1234 > \"FAI VCO OKPOS Agent/config.txt\""
   },
   "main": "dist/main.js",
   "packageManager": "yarn@1.22.22",
