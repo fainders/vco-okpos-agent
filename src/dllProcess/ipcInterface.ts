@@ -5,7 +5,7 @@ export type InterProcessMessage =
     }
   | {
       type: "msg-request";
-      data: object;
+      data: string;
       id: string;
     }
   | {

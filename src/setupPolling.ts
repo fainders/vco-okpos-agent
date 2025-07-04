@@ -71,7 +71,16 @@ export const setUpPollingPendingCommands = (
       }
     } catch (error) {
       logger.error("Error sending to DLL:", error);
-      const errorPayload = JSON.parse(error?.message || "{}");
+      let errorPayload;
+      try {
+        errorPayload = JSON.parse(error.message || "{}");
+      } catch (parseError) {
+        logger.error("Error parsing error message:", parseError);
+        errorPayload = {
+          message: error.message,
+        };
+      }
+      logger.error("Error payload:", errorPayload);
       await ackCommand(command.id, {
         success: false,
         error: errorPayload,

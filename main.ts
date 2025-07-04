@@ -289,10 +289,9 @@ export const messageToDll = (message: object): Promise<object> => {
 
     const requestId = Math.random().toString(36).substring(2, 15);
     const encoded = iconv.encode(JSON.stringify(message), "euc-kr");
-    const encodedMessage = encoded.toString("utf-8");
 
     const messageWithId: InterProcessMessage = {
-      data: JSON.parse(encodedMessage),
+      data: encoded.toString("latin1"), // ipc간 데이터 보존을 위해 latin1로 인코딩
       id: requestId,
       type: "msg-request",
     };
