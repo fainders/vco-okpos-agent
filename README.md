@@ -28,3 +28,6 @@ exe 파일 실행 전 exe파일 옆에 config.txt를 생성하고 API_KEY를 입
   OKPOS 컴퓨터의 로그를 활용해야 함
   C:\_OKPOS\CFG\LOG\OKDCAgent_yyyymmdd 파일을 참조하면 dll과 관련된 디버깅에 용이
   C:\_OKPOS\CFG\OKPOS.ini 파일에 [AFFILIATE]부분에 도움이 되는 로그파일이 작성되는 위치가 있음
+
+- version log
+  1.0.1 : dialog 삭제하여 앱이 준비되지 않은 상태에서 dialog를 띄우다가 crash가 나는 문제 해결

@@ -1,11 +1,4 @@
-import {
-  app,
-  dialog,
-  Menu,
-  nativeImage,
-  powerSaveBlocker,
-  Tray,
-} from "electron";
+import { app, Menu, nativeImage, powerSaveBlocker, Tray } from "electron";
 import { ChildProcess, fork, Serializable, spawn } from "child_process";
 import path from "path";
 import { logger } from "./src/logger";
@@ -26,8 +19,6 @@ let shouldRestartDllProcess = true;
 
 let stopPolling: (() => void) | null = null;
 
-// ui 변수
-let isDialogOpen = false;
 let tray: Tray | null = null;
 let lastDllProcessCheckTime = 0;
 let trayStatus: "connected" | "disconnected" = "connected";
@@ -41,19 +32,7 @@ try {
   checkConfig();
 } catch (error) {
   logger.error("[Electron] Error in checkConfig:", error.message);
-  isDialogOpen = true;
-  if (isPrd) {
-    dialog
-      .showMessageBox({
-        type: "error",
-        title: "설정 오류",
-        message: `설정이 완료되지 않았습니다. ${error.message}`,
-        buttons: ["OK"],
-      })
-      .then(() => {
-        app.quit();
-      });
-  }
+  app.quit();
 }
 
 function startDllProcess() {
@@ -87,19 +66,6 @@ function startDllProcess() {
   });
   dllProcess.on("error", (error) => {
     logger.error("[Electron] DLL process error:", error);
-    // if (!isDialogOpen) {
-    //   isDialogOpen = true;
-    //   dialog
-    //     .showMessageBox({
-    //       type: "error",
-    //       title: "DLL Error",
-    //       message: `DLL process error: ${error}`,
-    //       buttons: ["OK"],
-    //     })
-    //     .then(() => {
-    //       isDialogOpen = false;
-    //     });
-    // }
   });
   dllProcess.on("message", (msg) => {
     const response = msg as InterProcessMessage;
@@ -160,21 +126,6 @@ function startDllProcess() {
   });
   dllProcess.on("exit", (code) => {
     logger.warn(`[Electron] DLL process exited with code ${code}`);
-    // if (!isDialogOpen) {
-    //   if (code === 4294967295) {
-    //     isDialogOpen = true;
-    //     dialog
-    //       .showMessageBox({
-    //         type: "error",
-    //         title: "DLL 크래시",
-    //         message: `OKPOS이 연결되었는지 확인해 주세요.`,
-    //         buttons: ["OK"],
-    //       })
-    //       .then(() => {
-    //         isDialogOpen = false;
-    //       });
-    //   }
-    // }
     dllProcess = null;
     if (shouldRestartDllProcess) {
       setTimeout(() => {
@@ -212,17 +163,6 @@ app.on("ready", () => {
     );
   } catch (error) {
     logger.error("[Electron] Error creating tray icon:", error.message);
-    dialog
-      .showMessageBox({
-        type: "warning",
-        title: "Tray Icon Error",
-        message: `Error creating tray icon: ${error.message}`,
-        buttons: ["OK"],
-      })
-      .then(() => {
-        isDialogOpen = false;
-        app.quit();
-      });
   }
   stopPolling = setUpPollingPendingCommands(messageToDll);
   startDllProcess();
