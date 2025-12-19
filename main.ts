@@ -9,6 +9,7 @@ import { API_KEY, checkConfig } from "./src/configInfo";
 import { InterProcessMessage } from "./src/dllProcess/ipcInterface";
 import { requestWithRetry } from "./src/axiosInstance";
 import { setUpPollingPendingCommands } from "./src/setupPolling";
+import { requestOkposInit } from "./src/requestOkposInit";
 dotenv.config();
 const isPrd = app.isPackaged === true;
 
@@ -164,6 +165,7 @@ app.on("ready", () => {
   } catch (error) {
     logger.error("[Electron] Error creating tray icon:", error.message);
   }
+  requestOkposInit();
   stopPolling = setUpPollingPendingCommands(messageToDll);
   startDllProcess();
 });

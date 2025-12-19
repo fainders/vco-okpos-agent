@@ -31,3 +31,4 @@ exe 파일 실행 전 exe파일 옆에 config.txt를 생성하고 API_KEY를 입
 
 - version log
   1.0.1 : dialog 삭제하여 앱이 준비되지 않은 상태에서 dialog를 띄우다가 crash가 나는 문제 해결
+  1.1.0 : init시 백엔드로 요청을 보내는 requestOkposInit api를 추가하여 최초 1회 통신을 유도(이렇게 해야 callback register에서 문제가 없다는 경험법칙에 의함)
