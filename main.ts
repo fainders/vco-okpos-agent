@@ -173,7 +173,7 @@ function createOverlayWindow() {
     : path.join(__dirname, "src", "overlay", "overlay.html");
 
   overlayWindow = new BrowserWindow({
-    width: 180,
+    width: 150,
     height: 70,
     transparent: true,
     frame: false,
