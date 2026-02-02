@@ -15,8 +15,46 @@
       <div class="status-text">
         <div id="status-label" class="status-label">실행중</div>
       </div>
-      <button id="close-btn" class="close-btn" title="숨기기">×</button>
     </div>
-    <script src="overlay.js"></script>
+    <script>
+const { ipcRenderer, app } = require("electron");
+const path = require("path");
+
+const overlayContainer = document.getElementById("overlay-container");
+const agentIcon = document.getElementById("agent-icon");
+const statusIndicator = document.getElementById("status-indicator");
+const statusLabel = document.getElementById("status-label");
+const closeBtn = document.getElementById("close-btn");
+
+// 상태 업데이트 수신
+ipcRenderer.on(
+  "update-status",
+  (_event, data) => {
+    const { connected, message, iconPath } = data;
+    if (connected) {
+      statusIndicator.classList.remove("disconnected");
+      statusIndicator.classList.add("connected");
+      overlayContainer.classList.remove("disconnected");
+      statusLabel.textContent = message || "실행중";
+      agentIcon.src = iconPath;
+    } else {
+      statusIndicator.classList.remove("connected");
+      statusIndicator.classList.add("disconnected");
+      overlayContainer.classList.add("disconnected");
+      statusLabel.textContent = message || "연결 끊김";
+      agentIcon.src = iconPath;
+    }
+  }
+);
+
+// 더블클릭 시 상세 정보 표시
+statusLabel.addEventListener("dblclick", () => {
+  ipcRenderer.send("show-detail-window");
+});
+
+// 초기 상태 요청
+ipcRenderer.send("request-initial-status");
+
+    </script>
   </body>
 </html>

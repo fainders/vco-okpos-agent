@@ -17,6 +17,6 @@ export const requestOkposInit = async () => {
     })
     .catch((error) => {
       logger.error("[OKPOS INIT] OKPOS initialization failed");
-      logger.error(error);
+      logger.error(error.message);
     });
 };

@@ -101,7 +101,7 @@ export const setUpPollingPendingCommands = (
             }
           })
           .catch((error) => {
-            console.error("Error fetching pending commands:", error);
+            console.error("Error fetching pending commands:", error.message);
           });
       }, pollingInterval);
     }
