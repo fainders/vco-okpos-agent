@@ -39,7 +39,8 @@ const baseConfig = {
     "asarUnpack": [
       "node_modules/koffi/build/koffi",
       "dist/src/dll/*.dll",
-      "dist/src/dllProcess"
+      "dist/src/dllProcess",
+      "dist/src/overlay"
     ],
     "extraResources": [
       {

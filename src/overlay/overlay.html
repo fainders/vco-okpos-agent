@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VCO OKPOS Agent</title>
+    <link rel="stylesheet" href="overlay.css" />
+  </head>
+  <body>
+    <div id="overlay-container" class="draggable">
+      <div class="icon-container">
+        <img id="agent-icon" src="../assets/app-icon.png" alt="Agent Icon" />
+        <div id="status-indicator" class="status-indicator connected"></div>
+      </div>
+      <div class="status-text">
+        <div id="status-label" class="status-label">실행중</div>
+      </div>
+      <button id="close-btn" class="close-btn" title="숨기기">×</button>
+    </div>
+    <script src="overlay.js"></script>
+  </body>
+</html>
