@@ -13,16 +13,16 @@ body {
 }
 
 #overlay-container {
-  width: 150px;
+  width: 180px;
   background: rgba(255, 255, 255, 0.95);
-  border-radius: 12px;
+  border-radius: 14px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  padding: 12px;
+  padding: 14px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   position: relative;
-  transition: box-shadow 0.2s;
+  transition: box-shadow 0.2s, width 0.3s;
 }
 
 #overlay-container:hover {
@@ -39,8 +39,8 @@ body {
 }
 
 #agent-icon {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   display: block;
 }
 
@@ -79,14 +79,27 @@ body {
 }
 
 .status-label {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 600;
   color: #333;
-  margin-bottom: 2px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.status-hint {
+  font-size: 11px;
+  color: #c62828;
+  margin-top: 3px;
+  display: none;
   user-select: none;
   -webkit-user-select: none;
 }
 
 #overlay-container.disconnected {
+  width: 280px;
   background: rgba(255, 240, 240, 0.95);
+}
+
+#overlay-container.disconnected .status-hint {
+  display: block;
 }

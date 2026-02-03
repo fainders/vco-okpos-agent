@@ -174,11 +174,11 @@ function createOverlayWindow() {
     : path.join(__dirname, "src", "overlay", "overlay.html");
 
   const { width: screenWidth } = screen.getPrimaryDisplay().workAreaSize;
-  const windowWidth = 150;
+  const windowWidth = 280;
 
   overlayWindow = new BrowserWindow({
     width: windowWidth,
-    height: 70,
+    height: 85,
     x: Math.round((screenWidth - windowWidth) / 2),
     y: 10,
     transparent: true,
