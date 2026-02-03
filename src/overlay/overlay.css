@@ -13,16 +13,14 @@ body {
 }
 
 #overlay-container {
-  width: 180px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 14px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  padding: 14px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  position: relative;
-  transition: box-shadow 0.2s, width 0.3s;
+  padding: 10px 16px;
+  transition: box-shadow 0.2s, background 0.3s;
 }
 
 #overlay-container:hover {
@@ -34,25 +32,28 @@ body {
 }
 
 .icon-container {
-  position: relative;
   flex-shrink: 0;
 }
 
 #agent-icon {
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   display: block;
 }
 
+.status-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  -webkit-app-region: no-drag;
+}
+
 .status-indicator {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  border: 2px solid white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
 }
 
 .status-indicator.connected {
@@ -73,15 +74,11 @@ body {
   }
 }
 
-.status-text {
-  flex: 1;
-  -webkit-app-region: no-drag;
-}
-
 .status-label {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: #333;
+  white-space: nowrap;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -89,14 +86,13 @@ body {
 .status-hint {
   font-size: 11px;
   color: #c62828;
-  margin-top: 3px;
+  white-space: nowrap;
   display: none;
   user-select: none;
   -webkit-user-select: none;
 }
 
 #overlay-container.disconnected {
-  width: 280px;
   background: rgba(255, 240, 240, 0.95);
 }
 
