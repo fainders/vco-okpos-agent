@@ -6,17 +6,14 @@
   "scripts": {
     "transpile": "rimraf \"dist\" && tsc && xcopy \"src\\dll\" \"dist\\src\\dll\" /Y /i && xcopy \"src\\assets\" \"dist\\assets\" /Y /i && xcopy \"src\\package\" \"dist\\package\" /Y /i && xcopy \"src\\overlay\\*.html\" \"dist\\src\\overlay\" /Y /i && xcopy \"src\\overlay\\*.css\" \"dist\\src\\overlay\" /Y /i",
     "start": "yarn transpile && echo 1234 > config.txt && electron .",
-    "build:prd": "yarn transpile && rimraf \"FAI VCO OKPOS Agent\" && cross-env BUILD_TYPE=prd electron-builder && echo 1234 > \"FAI VCO OKPOS Agent/config.txt\"",
-    "build:dev": "yarn transpile && rimraf \"FAI VCO OKPOS Agent Dev\" && cross-env BUILD_TYPE=dev electron-builder && echo 1234 > \"FAI VCO OKPOS Agent Dev/config.txt\"",
-    "build:qa": "yarn transpile && rimraf \"FAI VCO OKPOS Agent QA\" && cross-env BUILD_TYPE=qa electron-builder && echo 1234 > \"FAI VCO OKPOS Agent QA/config.txt\"",
-    "build:local": "yarn transpile && rimraf \"FAI VCO OKPOS Agent Local\" && cross-env BUILD_TYPE=local electron-builder && echo 1234 > \"FAI VCO OKPOS Agent Local/config.txt\""
+    "build": "yarn transpile && rimraf \"FAI VCO OKPOS Agent\" && electron-builder && echo 1234 > \"FAI VCO OKPOS Agent/config.txt\"",
+    "postinstall": "electron-builder install-app-deps"
   },
   "main": "dist/main.js",
   "packageManager": "yarn@1.22.22",
   "dependencies": {
     "axios": "^1.9.0",
     "body-parser": "^2.2.0",
-    "cross-env": "^10.1.0",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "iconv-lite": "^0.6.3",
