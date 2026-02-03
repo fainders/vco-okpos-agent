@@ -13,14 +13,16 @@ body {
 }
 
 #overlay-container {
-  display: inline-flex;
+  display: flex;
+  width: 180px;
   align-items: center;
   gap: 10px;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 14px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   padding: 10px 16px;
-  transition: box-shadow 0.2s, background 0.3s;
+  overflow: hidden;
+  transition: box-shadow 0.2s, background 0.3s, width 0.3s;
 }
 
 #overlay-container:hover {
@@ -93,6 +95,7 @@ body {
 }
 
 #overlay-container.disconnected {
+  width: 420px;
   background: rgba(255, 240, 240, 0.95);
 }
 
