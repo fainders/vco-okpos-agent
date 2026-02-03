@@ -5,6 +5,7 @@ import {
   Menu,
   nativeImage,
   powerSaveBlocker,
+  screen,
   Tray,
 } from "electron";
 import { ChildProcess, fork, Serializable, spawn } from "child_process";
@@ -172,22 +173,27 @@ function createOverlayWindow() {
       )
     : path.join(__dirname, "src", "overlay", "overlay.html");
 
+  const { width: screenWidth } = screen.getPrimaryDisplay().workAreaSize;
+  const windowWidth = 150;
+
   overlayWindow = new BrowserWindow({
-    width: 150,
+    width: windowWidth,
     height: 70,
+    x: Math.round((screenWidth - windowWidth) / 2),
+    y: 10,
     transparent: true,
     frame: false,
-    alwaysOnTop: true,
     skipTaskbar: true,
     resizable: false,
+    focusable: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
     },
   });
 
+  overlayWindow.setAlwaysOnTop(true, "screen-saver");
   overlayWindow.loadFile(overlayPath);
-  overlayWindow.setIgnoreMouseEvents(false);
 
   if (!isPrd) {
     overlayWindow.webContents.openDevTools({ mode: "detach" });
