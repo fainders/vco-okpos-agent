@@ -95,7 +95,7 @@ body {
 }
 
 #overlay-container.disconnected {
-  width: 420px;
+  width: 380px;
   background: rgba(255, 240, 240, 0.95);
 }
 
