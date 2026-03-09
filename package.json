@@ -34,46 +34,6 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
-  "build": {
-    "appId": "ai.fainders.vcookposagent",
-    "productName": "FAI VCO OKPOS Agent",
-    "files": [
-      "dist/**/*",
-      "package.json"
-    ],
-    "directories": {
-      "output": "FAI VCO OKPOS Agent"
-    },
-    "asar": true,
-    "asarUnpack": [
-      "node_modules/koffi/build/koffi",
-      "dist/src/dll/*.dll",
-      "dist/src/dllProcess",
-      "dist/src/overlay/*.html",
-      "dist/src/overlay/*.css"
-    ],
-    "extraResources": [
-      {
-        "from": "src/assets",
-        "to": "assets"
-      },
-      {
-        "from": "src/package",
-        "to": "package"
-      }
-    ],
-    "win": {
-      "target": [
-        {
-          "target": "portable",
-          "arch": [
-            "ia32"
-          ]
-        }
-      ],
-      "icon": "src/assets/app-icon.png"
-    }
-  },
   "engines": {
     "node": ">=20.0.0",
     "electron": ">=33.0.0"
