@@ -137,11 +137,8 @@ function stopDllProcess() {
 function createOverlayWindow() {
   const overlayPath = isPrd ? path.join(process.resourcesPath, 'app.asar.unpacked', 'dist', 'src', 'overlay', 'overlay.html') : path.join(__dirname, 'src', 'overlay', 'overlay.html');
 
-  const { width: screenWidth } = screen.getPrimaryDisplay().workAreaSize;
-  const windowWidth = 480;
-
   overlayWindow = new BrowserWindow({
-    width: windowWidth,
+    width: 200,
     height: 60,
     x: 80,
     y: 10,
@@ -157,7 +154,6 @@ function createOverlayWindow() {
   });
 
   overlayWindow.setAlwaysOnTop(true, 'screen-saver');
-  overlayWindow.setIgnoreMouseEvents(true, { forward: true });
   overlayWindow.loadFile(overlayPath);
 
   if (!isPrd) {
@@ -290,6 +286,12 @@ function createDetailWindow() {
   logger.info('[Electron] Detail window created');
 }
 
+// 연결 상태별 창 너비 (컨텐츠 180px/380px + 그림자 여백 20px)
+const OVERLAY_WIDTH_CONNECTED = 200;
+const OVERLAY_WIDTH_DISCONNECTED = 400;
+// CSS transition 시간과 동기화 (overlay.css: transition width 0.3s)
+const OVERLAY_TRANSITION_MS = 300;
+
 function updateOverlayStatus(connected: boolean, message?: string) {
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     const iconPath = isPrd
@@ -300,6 +302,22 @@ function updateOverlayStatus(connected: boolean, message?: string) {
       message: message || (connected ? 'VCO 운영중' : 'VCO 운영 불가'),
       iconPath
     });
+
+    const newWidth = connected ? OVERLAY_WIDTH_CONNECTED : OVERLAY_WIDTH_DISCONNECTED;
+    const currentWidth = overlayWindow.getBounds().width;
+    if (currentWidth !== newWidth) {
+      if (newWidth > currentWidth) {
+        // 창이 커질 때: 즉시 확장 (컨텐츠가 잘리지 않도록)
+        overlayWindow.setSize(newWidth, 60);
+      } else {
+        // 창이 작아질 때: CSS transition 완료 후 축소
+        setTimeout(() => {
+          if (overlayWindow && !overlayWindow.isDestroyed()) {
+            overlayWindow.setSize(newWidth, 60);
+          }
+        }, OVERLAY_TRANSITION_MS);
+      }
+    }
   }
   if (detailWindow && !detailWindow.isDestroyed()) {
     detailWindow.webContents.send('update-detail-status', { connected });
@@ -328,12 +346,6 @@ app.on('ready', () => {
 
   ipcMain.on('request-initial-status', () => {
     updateOverlayStatus(trayStatus === 'connected', trayStatus === 'connected' ? 'VCO 운영중' : 'VCO 운영 불가');
-  });
-
-  ipcMain.on('set-ignore-mouse-events', (_event, ignore: boolean) => {
-    if (overlayWindow && !overlayWindow.isDestroyed()) {
-      overlayWindow.setIgnoreMouseEvents(ignore, { forward: true });
-    }
   });
 
   requestOkposInit();

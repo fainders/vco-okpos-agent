@@ -58,15 +58,6 @@ statusLabel.addEventListener("dblclick", () => {
   ipcRenderer.send("show-detail-window");
 });
 
-// 마우스가 UI 위에 있을 때만 클릭 이벤트 수신 (투명 영역은 클릭 통과)
-overlayContainer.addEventListener("mouseenter", () => {
-  ipcRenderer.send("set-ignore-mouse-events", false);
-});
-
-overlayContainer.addEventListener("mouseleave", () => {
-  ipcRenderer.send("set-ignore-mouse-events", true);
-});
-
 // 초기 상태 요청
 ipcRenderer.send("request-initial-status");
 
