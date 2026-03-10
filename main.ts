@@ -138,7 +138,7 @@ function createOverlayWindow() {
   const overlayPath = isPrd ? path.join(process.resourcesPath, 'app.asar.unpacked', 'dist', 'src', 'overlay', 'overlay.html') : path.join(__dirname, 'src', 'overlay', 'overlay.html');
 
   overlayWindow = new BrowserWindow({
-    width: 200,
+    width: 420,
     height: 60,
     x: 80,
     y: 10,
@@ -154,6 +154,32 @@ function createOverlayWindow() {
   });
 
   overlayWindow.setAlwaysOnTop(true, 'screen-saver');
+  overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+
+  // CSS 컨텐츠 너비: 연결 180px, 비연결 380px (overlay.css 기준)
+  const CONTENT_WIDTH_CONNECTED = 180;
+  const CONTENT_WIDTH_DISCONNECTED = 380;
+
+  // 커서 위치를 폴링하여 컨텐츠 영역 위에 있을 때만 마우스 이벤트 수신
+  // (렌더러 이벤트 방식은 -webkit-app-region:drag 가 모든 마우스 이벤트를 차단하므로 사용 불가)
+  let lastIgnoreState = true;
+  setInterval(() => {
+    if (!overlayWindow || overlayWindow.isDestroyed()) return;
+    const cursor = screen.getCursorScreenPoint();
+    const bounds = overlayWindow.getBounds();
+    const contentWidth = trayStatus === 'connected' ? CONTENT_WIDTH_CONNECTED : CONTENT_WIDTH_DISCONNECTED;
+    const isOverContent =
+      cursor.x >= bounds.x &&
+      cursor.x < bounds.x + contentWidth &&
+      cursor.y >= bounds.y &&
+      cursor.y < bounds.y + bounds.height;
+    const shouldIgnore = !isOverContent;
+    if (shouldIgnore !== lastIgnoreState) {
+      overlayWindow.setIgnoreMouseEvents(shouldIgnore, { forward: true });
+      lastIgnoreState = shouldIgnore;
+    }
+  }, 50);
+
   overlayWindow.loadFile(overlayPath);
 
   if (!isPrd) {
@@ -286,12 +312,6 @@ function createDetailWindow() {
   logger.info('[Electron] Detail window created');
 }
 
-// 연결 상태별 창 너비 (컨텐츠 180px/380px + 그림자 여백 20px)
-const OVERLAY_WIDTH_CONNECTED = 200;
-const OVERLAY_WIDTH_DISCONNECTED = 400;
-// CSS transition 시간과 동기화 (overlay.css: transition width 0.3s)
-const OVERLAY_TRANSITION_MS = 300;
-
 function updateOverlayStatus(connected: boolean, message?: string) {
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     const iconPath = isPrd
@@ -302,22 +322,6 @@ function updateOverlayStatus(connected: boolean, message?: string) {
       message: message || (connected ? 'VCO 운영중' : 'VCO 운영 불가'),
       iconPath
     });
-
-    const newWidth = connected ? OVERLAY_WIDTH_CONNECTED : OVERLAY_WIDTH_DISCONNECTED;
-    const currentWidth = overlayWindow.getBounds().width;
-    if (currentWidth !== newWidth) {
-      if (newWidth > currentWidth) {
-        // 창이 커질 때: 즉시 확장 (컨텐츠가 잘리지 않도록)
-        overlayWindow.setSize(newWidth, 60);
-      } else {
-        // 창이 작아질 때: CSS transition 완료 후 축소
-        setTimeout(() => {
-          if (overlayWindow && !overlayWindow.isDestroyed()) {
-            overlayWindow.setSize(newWidth, 60);
-          }
-        }, OVERLAY_TRANSITION_MS);
-      }
-    }
   }
   if (detailWindow && !detailWindow.isDestroyed()) {
     detailWindow.webContents.send('update-detail-status', { connected });
