@@ -6,9 +6,9 @@
   "scripts": {
     "transpile": "rimraf \"dist\" && tsc && xcopy \"src\\dll\" \"dist\\src\\dll\" /Y /i && xcopy \"src\\assets\" \"dist\\assets\" /Y /i && xcopy \"src\\package\" \"dist\\package\" /Y /i && xcopy \"src\\overlay\\*.html\" \"dist\\src\\overlay\" /Y /i && xcopy \"src\\overlay\\*.css\" \"dist\\src\\overlay\" /Y /i",
     "start": "yarn transpile && echo 1234 > config.txt && electron .",
-    "build:dev": "set BUILD_TYPE=dev&& node scripts/set-env.js && yarn transpile && rimraf \"FAI VCO OKPOS Agent Dev\" && electron-builder && echo 1234 > \"FAI VCO OKPOS Agent Dev/config.txt\"",
-    "build:qa": "set BUILD_TYPE=qa&& node scripts/set-env.js && yarn transpile && rimraf \"FAI VCO OKPOS Agent QA\" && electron-builder && echo 1234 > \"FAI VCO OKPOS Agent QA/config.txt\"",
-    "build:prd": "set BUILD_TYPE=prd&& node scripts/set-env.js && yarn transpile && rimraf \"FAI VCO OKPOS Agent\" && electron-builder && echo 1234 > \"FAI VCO OKPOS Agent/config.txt\"",
+    "build:dev": "set BUILD_TYPE=dev&& node scripts/set-env.js && yarn transpile && rimraf \"FAI VCO OKPOS Agent Dev\" && electron-builder --config electron-builder.config.js && echo 1234 > \"FAI VCO OKPOS Agent Dev/config.txt\"",
+    "build:qa": "set BUILD_TYPE=qa&& node scripts/set-env.js && yarn transpile && rimraf \"FAI VCO OKPOS Agent QA\" && electron-builder --config electron-builder.config.js && echo 1234 > \"FAI VCO OKPOS Agent QA/config.txt\"",
+    "build:prd": "set BUILD_TYPE=prd&& node scripts/set-env.js && yarn transpile && rimraf \"FAI VCO OKPOS Agent\" && electron-builder --config electron-builder.config.js && echo 1234 > \"FAI VCO OKPOS Agent/config.txt\"",
     "build": "yarn build:prd",
     "postinstall": "electron-builder install-app-deps"
   },

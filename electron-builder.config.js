@@ -32,10 +32,8 @@ const config = {
 
 const baseConfig = {
     "files": [
-      {
-        "from": ".",
-        "filter": ["dist/**", "package.json"]
-      }
+      "dist/**",
+      "package.json"
     ],
      "asar": true,
     "asarUnpack": [
