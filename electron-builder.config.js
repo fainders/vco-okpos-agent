@@ -1,31 +1,33 @@
 const type = process.env.BUILD_TYPE || 'dev';
+const { version } = require('./package.json');
+
 const config = {
   dev: {
     "appId": "ai.fainders.vcookposagentdev",
     "productName": "VCO OKPOS Agent Dev",
     "directories": {
-      "output": "FAI VCO OKPOS Agent Dev"
+      "output": `FAI VCO OKPOS Agent Dev v${version}`
     },
   },
   prd: {
     "appId": "ai.fainders.vcookposagent",
     "productName": "VCO OKPOS Agent",
     "directories": {
-      "output": "FAI VCO OKPOS Agent"
+      "output": `FAI VCO OKPOS Agent v${version}`
     },
   },
   qa: {
     "appId": "ai.fainders.vcookposagentqa",
     "productName": "VCO OKPOS Agent QA",
     "directories": {
-      "output": "FAI VCO OKPOS Agent QA"
+      "output": `FAI VCO OKPOS Agent QA v${version}`
     },
   },
   local: {
     "appId": "ai.fainders.vcookposagentlocal",
     "productName": "VCO OKPOS Agent Local",
     "directories": {
-      "output": "FAI VCO OKPOS Agent Local"
+      "output": `FAI VCO OKPOS Agent Local v${version}`
     },
   },
 };
