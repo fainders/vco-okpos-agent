@@ -5,7 +5,7 @@ import { logger } from './src/logger';
 import config from './config';
 import dotenv from 'dotenv';
 import iconv from 'iconv-lite';
-import { checkConfig, getApiKey, hasApiKey, setApiKey } from './src/configInfo';
+import { APP_DIR, checkConfig, getApiKey, hasApiKey, setApiKey } from './src/configInfo';
 import { InterProcessMessage } from './src/dllProcess/ipcInterface';
 import { requestWithRetry } from './src/axiosInstance';
 import { setUpPollingPendingCommands } from './src/setupPolling';
@@ -157,6 +157,7 @@ function startDllProcess() {
     env: {
       ...process.env,
       NODE_ENV: isPrd ? 'production' : 'development',
+      APP_DATA_DIR: APP_DIR,
       ...config
     }
   });
@@ -443,16 +444,13 @@ function updateOverlayStatus(connected: boolean, message?: string, hint?: string
 app.on('ready', () => {
   logger.info('[Electron] App is ready. Starting DLL process...');
 
-  // 포터블 앱 시작프로그램 등록
-  // process.execPath는 temp 폴더의 내부 electron 바이너리를 가리키므로
-  // PORTABLE_EXECUTABLE_FILE(원본 .exe 경로)을 사용해야 PORTABLE_EXECUTABLE_DIR이 올바르게 설정됨
+  // 시작프로그램 등록
   if (isPrd) {
-    const portableExePath = process.env.PORTABLE_EXECUTABLE_FILE || process.execPath;
     app.setLoginItemSettings({
       openAtLogin: true,
-      path: portableExePath,
+      path: process.execPath,
     });
-    logger.info('[Electron] Login item registered:', portableExePath);
+    logger.info('[Electron] Login item registered:', process.execPath);
   }
   try {
     const iconPath = isPrd ? path.join(process.resourcesPath, 'assets', 'app-icon.png') : path.join(__dirname, 'assets', 'app-icon.png'); // dev 모드 경로

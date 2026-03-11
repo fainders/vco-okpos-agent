@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
+import { app } from "electron";
 import { logger } from "./logger";
 import config from "../config";
 
@@ -9,8 +10,7 @@ dotenv.config();
 
 // Config values
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
-const APP_DIR =
-  process.env.PORTABLE_EXECUTABLE_DIR || path.join(__dirname, "..", "..");
+const APP_DIR = app.isPackaged ? app.getPath("userData") : path.join(__dirname, "..", "..");
 const ERP_URL = config.ERP_URL;
 const EXTERNAL_CODE = config.EXTERNAL_CODE;
 export const configPath = path.join(APP_DIR, "config.txt");
@@ -54,8 +54,7 @@ export function checkConfig(): void {
     throw new Error("EXTERNAL_CODE is not defined in environment variables");
   }
   if (!fs.existsSync(APP_DIR)) {
-    logger.error("APP_DIR does not exist:", APP_DIR);
-    throw new Error(`APP_DIR does not exist: ${APP_DIR}`);
+    fs.mkdirSync(APP_DIR, { recursive: true });
   }
   // API_KEY 부재는 main.ts에서 키 설정 창으로 처리합니다.
   if (!hasApiKey()) {

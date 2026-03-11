@@ -2,7 +2,15 @@ import winston from "winston";
 import "winston-daily-rotate-file";
 import path from "path";
 
-const APP_DIR = process.env.PORTABLE_EXECUTABLE_DIR || process.cwd();
+let APP_DIR: string;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { app } = require("electron");
+  APP_DIR = app.isPackaged ? app.getPath("userData") : process.cwd();
+} catch {
+  // child process (node.exe)에서 electron을 사용할 수 없는 경우
+  APP_DIR = process.env.APP_DATA_DIR || process.cwd();
+}
 const logDir = path.join(APP_DIR, "logs");
 
 const transport = new winston.transports.DailyRotateFile({
