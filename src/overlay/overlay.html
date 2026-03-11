@@ -24,21 +24,24 @@ const overlayContainer = document.getElementById("overlay-container");
 const agentIcon = document.getElementById("agent-icon");
 const statusIndicator = document.getElementById("status-indicator");
 const statusLabel = document.getElementById("status-label");
+const statusHint = document.getElementById("status-hint");
 
 // 상태 업데이트 수신
 ipcRenderer.on("update-status", (_event, data) => {
-  const { connected, message, iconPath } = data;
+  const { connected, message, hint, iconPath } = data;
 
   if (connected) {
     statusIndicator.classList.remove("disconnected");
     statusIndicator.classList.add("connected");
     overlayContainer.classList.remove("disconnected");
     statusLabel.textContent = message || "VCO 운영중";
+    statusHint.textContent = "*POS 프로그램을 (재)실행시켜주세요.";
   } else {
     statusIndicator.classList.remove("connected");
     statusIndicator.classList.add("disconnected");
     overlayContainer.classList.add("disconnected");
     statusLabel.textContent = message || "VCO 운영 불가";
+    statusHint.textContent = hint || "*POS 프로그램을 (재)실행시켜주세요.";
   }
 
   // 아이콘 경로 업데이트 (에러 핸들링 포함)

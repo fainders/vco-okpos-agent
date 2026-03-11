@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>API 키 설정</title>
+    <title>인증 키 설정</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -127,12 +127,12 @@
   </head>
   <body>
     <div class="container">
-      <h2>API 키 설정</h2>
+      <h2>인증 키 설정</h2>
       <p class="subtitle">VCO OKPOS Agent 인증 키를 입력해주세요.</p>
 
       <div id="notice" class="notice"></div>
 
-      <label for="api-key-input">API 키</label>
+      <label for="api-key-input">인증 키</label>
       <input
         id="api-key-input"
         type="text"
@@ -160,11 +160,11 @@
       ipcRenderer.on('init-key-setup', (_, data) => {
         input.value = data.currentKey || '';
         if (data.missingKey) {
-          notice.textContent = 'API 키가 설정되지 않았습니다. 키를 입력해야 서비스가 시작됩니다.';
+          notice.textContent = '인증 키가 설정되지 않았습니다. 키를 입력해야 서비스가 시작됩니다.';
           notice.classList.add('visible');
           btnCancel.style.display = 'none';
         } else if (data.invalidKey) {
-          notice.textContent = '인증 실패 (401). API 키가 올바르지 않습니다. 키를 다시 확인해주세요.';
+          notice.textContent = '인증 실패 (401). 인증 키가 올바르지 않습니다. 키를 다시 확인해주세요.';
           notice.classList.add('visible');
         }
       });
@@ -180,12 +180,27 @@
         input.classList.remove('error');
       }
 
-      input.addEventListener('input', clearError);
+      // 자동 대시 삽입: XXX-XXX-XXX 형식 (영숫자 9자 이하일 때만 적용)
+      input.addEventListener('input', () => {
+        clearError();
+        const raw = input.value.replace(/-/g, '');
+        if (raw.length <= 9 && /^[a-zA-Z0-9]*$/.test(raw)) {
+          let formatted = raw;
+          if (raw.length > 6) {
+            formatted = raw.slice(0, 3) + '-' + raw.slice(3, 6) + '-' + raw.slice(6);
+          } else if (raw.length > 3) {
+            formatted = raw.slice(0, 3) + '-' + raw.slice(3);
+          }
+          if (input.value !== formatted) {
+            input.value = formatted;
+          }
+        }
+      });
 
       btnSave.addEventListener('click', () => {
         const key = input.value.trim();
         if (!key) {
-          showError('API 키를 입력해주세요.');
+          showError('인증 키를 입력해주세요.');
           return;
         }
         ipcRenderer.send('save-api-key', { key });

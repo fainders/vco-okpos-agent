@@ -17,7 +17,7 @@ let keySetupWindow: BrowserWindow | null = null;
 
 function buildTrayMenu(updateReady: boolean) {
   const items: Electron.MenuItemConstructorOptions[] = [];
-  items.push({ label: '키 설정', click: () => openKeySetupWindow(false) });
+  items.push({ label: '인증 키 설정', click: () => openKeySetupWindow(false) });
   items.push({ type: 'separator' });
   if (updateReady) {
     items.push({ label: '업데이트 설치 후 재시작', click: () => autoUpdater.quitAndInstall() });
@@ -39,10 +39,10 @@ function openKeySetupWindow(missingKey: boolean, invalidKey = false) {
 
   keySetupWindow = new BrowserWindow({
     width: 420,
-    height: 260,
+    height: 310,
     resizable: false,
     alwaysOnTop: true,
-    title: 'API 키 설정',
+    title: '인증 키 설정',
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -109,7 +109,33 @@ let tray: Tray | null = null;
 let overlayWindow: BrowserWindow | null = null;
 let detailWindow: BrowserWindow | null = null;
 let lastDllProcessCheckTime = 0;
-let trayStatus: 'connected' | 'disconnected' = 'connected';
+let dllStatus: 'connected' | 'disconnected' = 'connected';
+let apiKeyStatus: 'valid' | 'invalid' = 'valid';
+
+function computeTrayStatus(): 'connected' | 'disconnected' {
+  return dllStatus === 'connected' && apiKeyStatus === 'valid' ? 'connected' : 'disconnected';
+}
+
+function applyTrayStatus() {
+  const connected = computeTrayStatus() === 'connected';
+  const iconName = connected ? 'app-icon.png' : 'app-icon-negative.png';
+  const iconPath = isPrd
+    ? path.join(process.resourcesPath, 'assets', iconName)
+    : path.join(__dirname, 'assets', iconName);
+
+  tray?.setImage(iconPath);
+
+  if (connected) {
+    tray?.setToolTip('FAI VCO OKPOS Agent가 실행 중입니다.');
+    updateOverlayStatus(true, 'VCO 운영중');
+  } else if (apiKeyStatus === 'invalid') {
+    tray?.setToolTip('FAI VCO OKPOS Agent 인증 키 오류');
+    updateOverlayStatus(false, '인증 키 오류', '*인증 키가 올바르지 않습니다. 트레이에서 인증 키를 확인해주세요.');
+  } else {
+    tray?.setToolTip('FAI VCO OKPOS Agent 연결 끊김');
+    updateOverlayStatus(false, 'VCO 운영 불가');
+  }
+}
 
 // DLL 프로세스가 응답하지 않는 경우의 타임아웃 시간 (ms)
 const PING_TIMEOUT_MS = 15000;
@@ -252,7 +278,7 @@ function createOverlayWindow() {
     if (!overlayWindow || overlayWindow.isDestroyed()) return;
     const cursor = screen.getCursorScreenPoint();
     const bounds = overlayWindow.getBounds();
-    const contentWidth = trayStatus === 'connected' ? CONTENT_WIDTH_CONNECTED : CONTENT_WIDTH_DISCONNECTED;
+    const contentWidth = computeTrayStatus() === 'connected' ? CONTENT_WIDTH_CONNECTED : CONTENT_WIDTH_DISCONNECTED;
     const isOverContent =
       cursor.x >= bounds.x &&
       cursor.x < bounds.x + contentWidth &&
@@ -360,7 +386,7 @@ function createDetailWindow() {
       <div class="info-item">
         <div class="label">상태</div>
         <div class="value">
-          <span id="status-badge" class="status-badge ${trayStatus === 'connected' ? 'status-connected' : 'status-disconnected'}">${trayStatus === 'connected' ? '정상 동작 중' : '연결 끊김'}</span>
+          <span id="status-badge" class="status-badge ${computeTrayStatus() === 'connected' ? 'status-connected' : 'status-disconnected'}">${computeTrayStatus() === 'connected' ? '정상 동작 중' : '연결 끊김'}</span>
         </div>
       </div>
       <div class="info-item">
@@ -397,7 +423,7 @@ function createDetailWindow() {
   logger.info('[Electron] Detail window created');
 }
 
-function updateOverlayStatus(connected: boolean, message?: string) {
+function updateOverlayStatus(connected: boolean, message?: string, hint?: string) {
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     const iconPath = isPrd
       ? path.join(process.resourcesPath, 'assets', connected ? 'app-icon.png' : 'app-icon-negative.png')
@@ -405,6 +431,7 @@ function updateOverlayStatus(connected: boolean, message?: string) {
     overlayWindow.webContents.send('update-status', {
       connected,
       message: message || (connected ? 'VCO 운영중' : 'VCO 운영 불가'),
+      hint,
       iconPath
     });
   }
@@ -451,19 +478,17 @@ app.on('ready', () => {
   });
 
   ipcMain.on('request-initial-status', () => {
-    updateOverlayStatus(trayStatus === 'connected', trayStatus === 'connected' ? 'VCO 운영중' : 'VCO 운영 불가');
+    applyTrayStatus();
   });
 
   ipcMain.on('save-api-key', (_, { key }: { key: string }) => {
     try {
       setApiKey(key);
       logger.info('[Electron] API key saved successfully.');
+      apiKeyStatus = 'valid';
       keySetupWindow?.close();
-      // 키 저장 후 init 재시도
-      if (hasApiKey()) {
-        requestOkposInit();
-        updateOverlayStatus(true, 'VCO 운영중');
-      }
+      applyTrayStatus();
+      requestOkposInit();
     } catch (error) {
       logger.error('[Electron] Failed to save API key:', error.message);
     }
@@ -481,9 +506,10 @@ app.on('ready', () => {
   }
 
   stopPolling = setUpPollingPendingCommands(messageToDll, () => {
-    // 401 수신 시: 오버레이 에러 표시 + 키 설정 창 열기
+    // 401 수신 시: apiKeyStatus 변경 → applyTrayStatus로 아이콘/오버레이 일괄 갱신
     logger.warn('[Electron] 401 detected — opening key setup window.');
-    updateOverlayStatus(false, '인증 키 오류 (401)');
+    apiKeyStatus = 'invalid';
+    applyTrayStatus();
     openKeySetupWindow(false, true);
   });
   startDllProcess();
@@ -513,28 +539,16 @@ process.on('SIGTERM', () => {
 setInterval(() => {
   const currentTime = Date.now();
   const delay = currentTime - lastDllProcessCheckTime;
+  const prevDllStatus = dllStatus;
+
   if (delay > PING_TIMEOUT_MS) {
-    if (trayStatus === 'connected') {
-      trayStatus = 'disconnected';
-      const iconPath = isPrd ? path.join(process.resourcesPath, 'assets', 'app-icon-negative.png') : path.join(__dirname, 'assets', 'app-icon-negative.png'); // dev 모드 경로
-
-      // const trayIcon = nativeImage.createFromPath(iconPath);
-      // tray = new Tray(trayIcon);
-      tray.setImage(iconPath);
-      tray?.setToolTip('FAI VCO OKPOS Agent 연결 끊김');
-      updateOverlayStatus(false, 'VCO 운영 불가');
-    }
+    dllStatus = 'disconnected';
   } else {
-    if (trayStatus === 'disconnected') {
-      trayStatus = 'connected';
-      const iconPath = isPrd ? path.join(process.resourcesPath, 'assets', 'app-icon.png') : path.join(__dirname, 'assets', 'app-icon.png'); // dev 모드 경로
+    dllStatus = 'connected';
+  }
 
-      // const trayIcon = nativeImage.createFromPath(iconPath);
-      // tray = new Tray(trayIcon);
-      tray.setImage(iconPath);
-      tray?.setToolTip('FAI VCO OKPOS Agent가 실행 중입니다.');
-      updateOverlayStatus(true, 'VCO 운영중');
-    }
+  if (dllStatus !== prevDllStatus) {
+    applyTrayStatus();
   }
 }, 5000);
 
