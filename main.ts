@@ -501,8 +501,10 @@ app.on('ready', () => {
     keySetupWindow?.close();
   });
 
-  // API 키가 없으면 키 설정 창 표시
+  // API 키가 없으면 상태를 invalid로 설정 후 키 설정 창 표시
   if (!hasApiKey()) {
+    apiKeyStatus = 'invalid';
+    applyTrayStatus();
     openKeySetupWindow(true);
   } else {
     requestOkposInit();
