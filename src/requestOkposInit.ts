@@ -1,5 +1,5 @@
 import { requestWithRetry } from "./axiosInstance";
-import { API_KEY } from "./configInfo";
+import { getApiKey } from "./configInfo";
 import { logger } from "./logger";
 
 export const requestOkposInit = async () => {
@@ -9,7 +9,7 @@ export const requestOkposInit = async () => {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": API_KEY,
+      "x-api-key": getApiKey(),
     },
   })
     .then(() => {

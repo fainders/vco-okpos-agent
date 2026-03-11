@@ -5,7 +5,7 @@ import { logger } from './src/logger';
 import config from './config';
 import dotenv from 'dotenv';
 import iconv from 'iconv-lite';
-import { API_KEY, checkConfig } from './src/configInfo';
+import { checkConfig, getApiKey, hasApiKey, setApiKey } from './src/configInfo';
 import { InterProcessMessage } from './src/dllProcess/ipcInterface';
 import { requestWithRetry } from './src/axiosInstance';
 import { setUpPollingPendingCommands } from './src/setupPolling';
@@ -13,14 +13,56 @@ import { requestOkposInit } from './src/requestOkposInit';
 import { autoUpdater } from 'electron-updater';
 dotenv.config();
 
+let keySetupWindow: BrowserWindow | null = null;
+
 function buildTrayMenu(updateReady: boolean) {
   const items: Electron.MenuItemConstructorOptions[] = [];
+  items.push({ label: '키 설정', click: () => openKeySetupWindow(false) });
+  items.push({ type: 'separator' });
   if (updateReady) {
     items.push({ label: '업데이트 설치 후 재시작', click: () => autoUpdater.quitAndInstall() });
     items.push({ type: 'separator' });
   }
   items.push({ label: '종료', click: () => app.quit() });
   return Menu.buildFromTemplate(items);
+}
+
+function openKeySetupWindow(missingKey: boolean, invalidKey = false) {
+  if (keySetupWindow) {
+    keySetupWindow.focus();
+    return;
+  }
+
+  const keySetupPath = isPrd
+    ? path.join(process.resourcesPath, 'app.asar.unpacked', 'dist', 'src', 'overlay', 'key-setup.html')
+    : path.join(__dirname, 'src', 'overlay', 'key-setup.html');
+
+  keySetupWindow = new BrowserWindow({
+    width: 420,
+    height: 260,
+    resizable: false,
+    alwaysOnTop: true,
+    title: 'API 키 설정',
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+    },
+  });
+
+  keySetupWindow.setMenu(null);
+  keySetupWindow.loadFile(keySetupPath);
+
+  keySetupWindow.webContents.once('did-finish-load', () => {
+    keySetupWindow?.webContents.send('init-key-setup', {
+      currentKey: hasApiKey() ? getApiKey() : '',
+      missingKey,
+      invalidKey,
+    });
+  });
+
+  keySetupWindow.on('closed', () => {
+    keySetupWindow = null;
+  });
 }
 
 function setupAutoUpdater() {
@@ -138,7 +180,7 @@ function startDllProcess() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-api-key': API_KEY
+            'x-api-key': getApiKey()
           },
           data: parsed
         },
@@ -412,8 +454,38 @@ app.on('ready', () => {
     updateOverlayStatus(trayStatus === 'connected', trayStatus === 'connected' ? 'VCO 운영중' : 'VCO 운영 불가');
   });
 
-  requestOkposInit();
-  stopPolling = setUpPollingPendingCommands(messageToDll);
+  ipcMain.on('save-api-key', (_, { key }: { key: string }) => {
+    try {
+      setApiKey(key);
+      logger.info('[Electron] API key saved successfully.');
+      keySetupWindow?.close();
+      // 키 저장 후 init 재시도
+      if (hasApiKey()) {
+        requestOkposInit();
+        updateOverlayStatus(true, 'VCO 운영중');
+      }
+    } catch (error) {
+      logger.error('[Electron] Failed to save API key:', error.message);
+    }
+  });
+
+  ipcMain.on('cancel-key-setup', () => {
+    keySetupWindow?.close();
+  });
+
+  // API 키가 없으면 키 설정 창 표시
+  if (!hasApiKey()) {
+    openKeySetupWindow(true);
+  } else {
+    requestOkposInit();
+  }
+
+  stopPolling = setUpPollingPendingCommands(messageToDll, () => {
+    // 401 수신 시: 오버레이 에러 표시 + 키 설정 창 열기
+    logger.warn('[Electron] 401 detected — opening key setup window.');
+    updateOverlayStatus(false, '인증 키 오류 (401)');
+    openKeySetupWindow(false, true);
+  });
   startDllProcess();
 });
 

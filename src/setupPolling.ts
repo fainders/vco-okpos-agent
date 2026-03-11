@@ -1,6 +1,6 @@
 import { isAxiosError } from "axios";
 import { requestWithRetry } from "./axiosInstance";
-import { API_KEY } from "./configInfo";
+import { getApiKey } from "./configInfo";
 import { logger } from "./logger";
 
 interface PendingCommand {
@@ -16,7 +16,7 @@ const getPendingCommands = async () => {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": API_KEY,
+      "x-api-key": getApiKey(),
     },
   }).then((response) => {
     return response.data.pendingCommand || [];
@@ -28,14 +28,15 @@ const ackCommand = async (id: string, result: any) => {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": API_KEY,
+      "x-api-key": getApiKey(),
     },
     data: result,
   });
 };
 
 export const setUpPollingPendingCommands = (
-  sendToDll: (data: any) => Promise<any>
+  sendToDll: (data: any) => Promise<any>,
+  onUnauthorized?: () => void
 ) => {
   const pollingInterval = 5000; // 5초마다 폴링
   const ackInterval = 1000; // ACK 주기 (1초)
@@ -101,7 +102,12 @@ export const setUpPollingPendingCommands = (
             }
           })
           .catch((error) => {
-            console.error("Error fetching pending commands:", error.message);
+            if (isAxiosError(error) && error.response?.status === 401) {
+              logger.warn("[Polling] 401 Unauthorized — API 키가 잘못되었습니다.");
+              onUnauthorized?.();
+            } else {
+              logger.error("Error fetching pending commands:", error.message);
+            }
           });
       }, pollingInterval);
     }

@@ -13,10 +13,31 @@ const APP_DIR =
   process.env.PORTABLE_EXECUTABLE_DIR || path.join(__dirname, "..", "..");
 const ERP_URL = config.ERP_URL;
 const EXTERNAL_CODE = config.EXTERNAL_CODE;
-const configPath = path.join(APP_DIR, "config.txt");
-let API_KEY: string;
+export const configPath = path.join(APP_DIR, "config.txt");
+
+let _apiKey = "";
 if (fs.existsSync(configPath)) {
-  API_KEY = fs.readFileSync(configPath, "utf-8").replace(/\r?\n|\r/g, "");
+  _apiKey = fs.readFileSync(configPath, "utf-8").replace(/\r?\n|\r/g, "").trim();
+}
+
+/** 현재 API 키를 반환합니다 (항상 최신 메모리 값). */
+export function getApiKey(): string {
+  return _apiKey;
+}
+
+/** API 키가 설정되어 있는지 확인합니다. */
+export function hasApiKey(): boolean {
+  return _apiKey.length > 0;
+}
+
+/**
+ * API 키를 업데이트하고 config.txt에 저장합니다.
+ * 하위 호환성: 기존 긴 형식(a293fhr9w3fwerk)과 새 형식(ABC-123-456) 모두 허용합니다.
+ */
+export function setApiKey(key: string): void {
+  _apiKey = key.trim();
+  fs.writeFileSync(configPath, _apiKey, "utf-8");
+  logger.info("[Config] API key updated.");
 }
 
 export function checkConfig(): void {
@@ -32,18 +53,14 @@ export function checkConfig(): void {
   if (!EXTERNAL_CODE) {
     throw new Error("EXTERNAL_CODE is not defined in environment variables");
   }
-
   if (!fs.existsSync(APP_DIR)) {
     logger.error("APP_DIR does not exist:", APP_DIR);
     throw new Error(`APP_DIR does not exist: ${APP_DIR}`);
   }
-  if (!fs.existsSync(configPath)) {
-    logger.error("config.txt does not exist:", configPath);
-    throw new Error(`config.txt does not exist: ${configPath}`);
-  }
-  if (!API_KEY) {
-    logger.error("API_KEY is not defined in config.txt");
-    throw new Error("API_KEY is not defined in config.txt");
+  // API_KEY 부재는 main.ts에서 키 설정 창으로 처리합니다.
+  if (!hasApiKey()) {
+    logger.warn("[Config] API key is not set. Key setup window will be shown.");
   }
 }
-export { APP_DIR, ERP_URL, EXTERNAL_CODE, API_KEY, IS_PRODUCTION };
+
+export { APP_DIR, ERP_URL, EXTERNAL_CODE, IS_PRODUCTION };

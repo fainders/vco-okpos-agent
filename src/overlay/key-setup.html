@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>API 키 설정</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #f5f5f5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+        padding: 28px 24px 20px;
+        width: 100%;
+        max-width: 400px;
+      }
+
+      h2 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 6px;
+      }
+
+      .subtitle {
+        font-size: 12px;
+        color: #888;
+        margin-bottom: 20px;
+      }
+
+      .notice {
+        background: #fff8e1;
+        border-left: 3px solid #f59e0b;
+        border-radius: 4px;
+        padding: 10px 12px;
+        font-size: 12px;
+        color: #92400e;
+        margin-bottom: 18px;
+        display: none;
+      }
+
+      .notice.visible { display: block; }
+
+      label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1.5px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: "Courier New", monospace;
+        color: #1a1a1a;
+        outline: none;
+        transition: border-color 0.15s;
+        letter-spacing: 0.05em;
+      }
+
+      input:focus { border-color: #4caf50; }
+      input.error { border-color: #f44336; }
+
+      .hint {
+        font-size: 11px;
+        color: #aaa;
+        margin-top: 5px;
+      }
+
+      .error-msg {
+        font-size: 11px;
+        color: #f44336;
+        margin-top: 5px;
+        display: none;
+      }
+
+      .error-msg.visible { display: block; }
+
+      .buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 22px;
+        justify-content: flex-end;
+      }
+
+      button {
+        padding: 9px 20px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: background 0.15s, opacity 0.15s;
+      }
+
+      .btn-cancel {
+        background: #f0f0f0;
+        color: #555;
+      }
+
+      .btn-cancel:hover { background: #e0e0e0; }
+
+      .btn-save {
+        background: #4caf50;
+        color: white;
+      }
+
+      .btn-save:hover { background: #43a047; }
+      .btn-save:disabled { background: #b0bec5; cursor: not-allowed; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>API 키 설정</h2>
+      <p class="subtitle">VCO OKPOS Agent 인증 키를 입력해주세요.</p>
+
+      <div id="notice" class="notice"></div>
+
+      <label for="api-key-input">API 키</label>
+      <input
+        id="api-key-input"
+        type="text"
+        placeholder="ABC-123-456"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <p id="error-msg" class="error-msg"></p>
+
+      <div class="buttons">
+        <button class="btn-cancel" id="btn-cancel">취소</button>
+        <button class="btn-save" id="btn-save">저장</button>
+      </div>
+    </div>
+
+    <script>
+      const { ipcRenderer } = require('electron');
+
+      const input = document.getElementById('api-key-input');
+      const btnSave = document.getElementById('btn-save');
+      const btnCancel = document.getElementById('btn-cancel');
+      const notice = document.getElementById('notice');
+      const errorMsg = document.getElementById('error-msg');
+
+      ipcRenderer.on('init-key-setup', (_, data) => {
+        input.value = data.currentKey || '';
+        if (data.missingKey) {
+          notice.textContent = 'API 키가 설정되지 않았습니다. 키를 입력해야 서비스가 시작됩니다.';
+          notice.classList.add('visible');
+          btnCancel.style.display = 'none';
+        } else if (data.invalidKey) {
+          notice.textContent = '인증 실패 (401). API 키가 올바르지 않습니다. 키를 다시 확인해주세요.';
+          notice.classList.add('visible');
+        }
+      });
+
+      function showError(msg) {
+        errorMsg.textContent = msg;
+        errorMsg.classList.add('visible');
+        input.classList.add('error');
+      }
+
+      function clearError() {
+        errorMsg.classList.remove('visible');
+        input.classList.remove('error');
+      }
+
+      input.addEventListener('input', clearError);
+
+      btnSave.addEventListener('click', () => {
+        const key = input.value.trim();
+        if (!key) {
+          showError('API 키를 입력해주세요.');
+          return;
+        }
+        ipcRenderer.send('save-api-key', { key });
+      });
+
+      btnCancel.addEventListener('click', () => {
+        ipcRenderer.send('cancel-key-setup');
+      });
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') btnSave.click();
+        if (e.key === 'Escape') btnCancel.click();
+      });
+
+      // 포커스
+      window.addEventListener('load', () => input.focus());
+    </script>
+  </body>
+</html>
