@@ -330,6 +330,15 @@ function updateOverlayStatus(connected: boolean, message?: string) {
 
 app.on('ready', () => {
   logger.info('[Electron] App is ready. Starting DLL process...');
+
+  // 포터블 앱 시작프로그램 등록 (매 실행 시 경로 갱신)
+  if (isPrd) {
+    app.setLoginItemSettings({
+      openAtLogin: true,
+      path: process.execPath,
+    });
+    logger.info('[Electron] Login item settings updated.');
+  }
   try {
     const iconPath = isPrd ? path.join(process.resourcesPath, 'assets', 'app-icon.png') : path.join(__dirname, 'assets', 'app-icon.png'); // dev 모드 경로
 
