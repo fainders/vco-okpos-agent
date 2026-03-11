@@ -1,6 +1,6 @@
 /**
  * 빌드 타입별 전체 빌드 프로세스를 처리합니다.
- * config.ts 생성 → transpile → 이전 출력 폴더 삭제 → electron-builder → config.txt 생성
+ * config.ts 생성 → transpile → 이전 출력 폴더 삭제 → electron-builder
  *
  * 사용 예시 (Windows cmd):
  *   set BUILD_TYPE=prd&& node scripts/build.js
@@ -69,6 +69,4 @@ execSync(`electron-builder --config electron-builder.config.js ${publishFlag}`, 
   env: process.env,
 });
 
-// 5. config.txt 생성 (API_KEY 입력용 placeholder)
-fs.writeFileSync(path.join(outputPath, 'config.txt'), '1234');
 console.log(`[build] Done → ${outputFolder}`);
