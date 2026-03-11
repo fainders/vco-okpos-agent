@@ -60,10 +60,18 @@ const baseConfig = {
         "to": "package"
       }
     ],
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": false,
+      "createStartMenuShortcut": true,
+      "shortcutName": "VCO OKPOS Agent",
+      "runAfterFinish": true
+    },
     "win": {
       "target": [
         {
-          "target": "portable",
+          "target": "nsis",
           "arch": [
             "ia32"
           ]
