@@ -8,6 +8,13 @@ const config = {
     "directories": {
       "output": `FAI VCO OKPOS Agent Dev v${version}`
     },
+    "publish": {
+      "provider": "github",
+      "owner": "fainders",
+      "repo": "vco-okpos-agent",
+      "releaseType": "prerelease",
+      "channel": "dev"
+    },
   },
   prd: {
     "appId": "ai.fainders.vcookposagent",
@@ -65,7 +72,7 @@ const baseConfig = {
       "perMachine": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "VCO OKPOS Agent",
+      "shortcutName": config[type].productName,
       "runAfterFinish": true
     },
     "win": {

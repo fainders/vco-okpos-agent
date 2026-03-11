@@ -444,8 +444,8 @@ function updateOverlayStatus(connected: boolean, message?: string, hint?: string
 app.on('ready', () => {
   logger.info('[Electron] App is ready. Starting DLL process...');
 
-  // 시작프로그램 등록
-  if (isPrd) {
+  // 시작프로그램 등록 (prd 빌드에서만)
+  if (isPrd && config.BUILD_TYPE === 'prd') {
     app.setLoginItemSettings({
       openAtLogin: true,
       path: process.execPath,
@@ -462,8 +462,11 @@ app.on('ready', () => {
     logger.error('[Electron] Error creating tray icon:', error.message);
   }
 
-  // 자동 업데이트 설정 (prd 빌드에서만)
+  // 자동 업데이트 설정 (패키지 빌드에서만, dev 빌드는 dev 채널 사용)
   if (isPrd) {
+    if (config.BUILD_TYPE === 'dev') {
+      autoUpdater.channel = 'dev';
+    }
     setupAutoUpdater();
     autoUpdater.checkForUpdatesAndNotify().catch((error) => {
       logger.error('[Updater] checkForUpdates failed:', error.message);

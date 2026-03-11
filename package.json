@@ -10,6 +10,7 @@
     "build:qa": "set BUILD_TYPE=qa&& node scripts/build.js",
     "build:prd": "set BUILD_TYPE=prd&& node scripts/build.js",
     "build": "yarn build:prd",
+    "publish:dev": "set BUILD_TYPE=dev&& set PUBLISH=always&& node scripts/build.js",
     "publish:prd": "set BUILD_TYPE=prd&& set PUBLISH=always&& node scripts/build.js",
     "postinstall": "electron-builder install-app-deps"
   },
