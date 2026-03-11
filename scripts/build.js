@@ -9,6 +9,7 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const ROOT = path.join(__dirname, '..');
 const buildType = process.env.BUILD_TYPE || 'dev';
@@ -60,8 +61,9 @@ if (fs.existsSync(outputPath)) {
 }
 
 // 4. electron-builder 실행
+const publishFlag = process.env.PUBLISH ? `--publish ${process.env.PUBLISH}` : '';
 console.log('[build] Running electron-builder...');
-execSync('electron-builder --config electron-builder.config.js', {
+execSync(`electron-builder --config electron-builder.config.js ${publishFlag}`, {
   stdio: 'inherit',
   cwd: ROOT,
   env: process.env,

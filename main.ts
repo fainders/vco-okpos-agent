@@ -10,7 +10,50 @@ import { InterProcessMessage } from './src/dllProcess/ipcInterface';
 import { requestWithRetry } from './src/axiosInstance';
 import { setUpPollingPendingCommands } from './src/setupPolling';
 import { requestOkposInit } from './src/requestOkposInit';
+import { autoUpdater } from 'electron-updater';
 dotenv.config();
+
+function buildTrayMenu(updateReady: boolean) {
+  const items: Electron.MenuItemConstructorOptions[] = [];
+  if (updateReady) {
+    items.push({ label: '업데이트 설치 후 재시작', click: () => autoUpdater.quitAndInstall() });
+    items.push({ type: 'separator' });
+  }
+  items.push({ label: '종료', click: () => app.quit() });
+  return Menu.buildFromTemplate(items);
+}
+
+function setupAutoUpdater() {
+  autoUpdater.logger = logger;
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on('checking-for-update', () => {
+    logger.info('[Updater] Checking for update...');
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    logger.info('[Updater] Update available:', info.version);
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    logger.info('[Updater] Already up to date.');
+  });
+
+  autoUpdater.on('download-progress', (progress) => {
+    logger.info(`[Updater] Download progress: ${Math.round(progress.percent)}%`);
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    logger.info('[Updater] Update downloaded:', info.version);
+    tray?.setContextMenu(buildTrayMenu(true));
+    tray?.setToolTip(`업데이트 준비 완료 (v${info.version}) — 트레이 메뉴에서 재시작`);
+  });
+
+  autoUpdater.on('error', (error) => {
+    logger.error('[Updater] Error:', error.message);
+  });
+}
 const isPrd = app.isPackaged === true;
 
 let dllProcess: ChildProcess | null = null;
@@ -344,9 +387,17 @@ app.on('ready', () => {
 
     const trayIcon = nativeImage.createFromPath(iconPath);
     tray = new Tray(trayIcon);
-    tray.setContextMenu(Menu.buildFromTemplate([{ label: '종료', click: () => app.quit() }]));
+    tray.setContextMenu(buildTrayMenu(false));
   } catch (error) {
     logger.error('[Electron] Error creating tray icon:', error.message);
+  }
+
+  // 자동 업데이트 설정 (prd 빌드에서만)
+  if (isPrd) {
+    setupAutoUpdater();
+    autoUpdater.checkForUpdatesAndNotify().catch((error) => {
+      logger.error('[Updater] checkForUpdates failed:', error.message);
+    });
   }
 
   // Overlay 윈도우 생성

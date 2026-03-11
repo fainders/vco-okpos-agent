@@ -15,6 +15,12 @@ const config = {
     "directories": {
       "output": `FAI VCO OKPOS Agent v${version}`
     },
+    "publish": {
+      "provider": "github",
+      "owner": "fainders",
+      "repo": "vco-okpos-agent",
+      "releaseType": "release"
+    },
   },
   qa: {
     "appId": "ai.fainders.vcookposagentqa",
