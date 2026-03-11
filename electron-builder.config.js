@@ -63,7 +63,7 @@ const baseConfig = {
     "nsis": {
       "oneClick": true,
       "perMachine": false,
-      "createDesktopShortcut": false,
+      "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "VCO OKPOS Agent",
       "runAfterFinish": true
