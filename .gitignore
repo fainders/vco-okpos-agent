@@ -1,5 +1,6 @@
 node_modules
 build
+!build/nsis/
 FAI VCO OKPOS Agent*
 dist
 logs

@@ -73,7 +73,8 @@ const baseConfig = {
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": config[type].productName,
-      "runAfterFinish": true
+      "runAfterFinish": true,
+      "include": `build/nsis/${type}.nsh`
     },
     "win": {
       "target": [
