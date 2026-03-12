@@ -13,6 +13,12 @@ import { requestOkposInit } from './src/requestOkposInit';
 import { autoUpdater } from 'electron-updater';
 dotenv.config();
 
+// 단일 인스턴스 보장: 이미 실행 중이면 즉시 종료
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+  process.exit(0);
+}
+
 let keySetupWindow: BrowserWindow | null = null;
 
 function buildTrayMenu(updateReady: boolean) {
@@ -444,14 +450,6 @@ function updateOverlayStatus(connected: boolean, message?: string, hint?: string
 app.on('ready', () => {
   logger.info('[Electron] App is ready. Starting DLL process...');
 
-  // 시작프로그램 등록 (prd 빌드에서만)
-  if (isPrd && config.BUILD_TYPE === 'prd') {
-    app.setLoginItemSettings({
-      openAtLogin: true,
-      path: process.execPath,
-    });
-    logger.info('[Electron] Login item registered:', process.execPath);
-  }
   try {
     const iconPath = isPrd ? path.join(process.resourcesPath, 'assets', 'app-icon.png') : path.join(__dirname, 'assets', 'app-icon.png'); // dev 모드 경로
 
