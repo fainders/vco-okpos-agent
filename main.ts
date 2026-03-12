@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Menu, nativeImage, powerSaveBlocker, screen, Tray } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, nativeImage, Notification, powerSaveBlocker, screen, Tray } from 'electron';
 import { ChildProcess, fork, Serializable, spawn } from 'child_process';
 import path from 'path';
 import { logger } from './src/logger';
@@ -21,14 +21,10 @@ if (!app.requestSingleInstanceLock()) {
 
 let keySetupWindow: BrowserWindow | null = null;
 
-function buildTrayMenu(updateReady: boolean) {
+function buildTrayMenu() {
   const items: Electron.MenuItemConstructorOptions[] = [];
   items.push({ label: '인증 키 설정', click: () => openKeySetupWindow(false) });
   items.push({ type: 'separator' });
-  if (updateReady) {
-    items.push({ label: '업데이트 설치 후 재시작', click: () => autoUpdater.quitAndInstall() });
-    items.push({ type: 'separator' });
-  }
   items.push({ label: '종료', click: () => app.quit() });
   return Menu.buildFromTemplate(items);
 }
@@ -82,6 +78,10 @@ function setupAutoUpdater() {
 
   autoUpdater.on('update-available', (info) => {
     logger.info('[Updater] Update available:', info.version);
+    new Notification({
+      title: 'VCO OKPOS Agent 업데이트',
+      body: `새 버전(v${info.version})을 다운로드하고 있습니다. 완료 후 자동으로 재시작됩니다.`,
+    }).show();
   });
 
   autoUpdater.on('update-not-available', () => {
@@ -93,9 +93,8 @@ function setupAutoUpdater() {
   });
 
   autoUpdater.on('update-downloaded', (info) => {
-    logger.info('[Updater] Update downloaded:', info.version);
-    tray?.setContextMenu(buildTrayMenu(true));
-    tray?.setToolTip(`업데이트 준비 완료 (v${info.version}) — 트레이 메뉴에서 재시작`);
+    logger.info('[Updater] Update downloaded, installing now:', info.version);
+    autoUpdater.quitAndInstall(true, true);
   });
 
   autoUpdater.on('error', (error) => {
@@ -455,7 +454,7 @@ app.on('ready', () => {
 
     const trayIcon = nativeImage.createFromPath(iconPath);
     tray = new Tray(trayIcon);
-    tray.setContextMenu(buildTrayMenu(false));
+    tray.setContextMenu(buildTrayMenu());
   } catch (error) {
     logger.error('[Electron] Error creating tray icon:', error.message);
   }
@@ -466,7 +465,7 @@ app.on('ready', () => {
       autoUpdater.channel = 'dev';
     }
     setupAutoUpdater();
-    autoUpdater.checkForUpdatesAndNotify().catch((error) => {
+    autoUpdater.checkForUpdates().catch((error) => {
       logger.error('[Updater] checkForUpdates failed:', error.message);
     });
   }
