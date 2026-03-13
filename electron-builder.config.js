@@ -3,93 +3,83 @@ const { version } = require('./package.json');
 
 const config = {
   dev: {
-    "appId": "ai.fainders.vcookposagentdev",
-    "productName": "VCO OKPOS Agent Dev",
-    "directories": {
-      "output": `FAI VCO OKPOS Agent Dev v${version}`
+    appId: 'ai.fainders.vcookposagentdev',
+    productName: 'VCO OKPOS Agent Dev',
+    directories: {
+      output: `../FAI VCO OKPOS Agent Dev v${version}`
     },
-    "publish": {
-      "provider": "github",
-      "owner": "fainders",
-      "repo": "vco-okpos-agent",
-      "releaseType": "prerelease",
-      "channel": "dev"
-    },
+    publish: {
+      provider: 'github',
+      owner: 'fainders',
+      repo: 'vco-okpos-agent',
+      releaseType: 'prerelease',
+      channel: 'dev'
+    }
   },
   prd: {
-    "appId": "ai.fainders.vcookposagent",
-    "productName": "VCO OKPOS Agent",
-    "directories": {
-      "output": `FAI VCO OKPOS Agent v${version}`
+    appId: 'ai.fainders.vcookposagent',
+    productName: 'VCO OKPOS Agent',
+    directories: {
+      output: `../FAI VCO OKPOS Agent v${version}`
     },
-    "publish": {
-      "provider": "github",
-      "owner": "fainders",
-      "repo": "vco-okpos-agent",
-      "releaseType": "release"
-    },
+    publish: {
+      provider: 'github',
+      owner: 'fainders',
+      repo: 'vco-okpos-agent',
+      releaseType: 'release'
+    }
   },
   qa: {
-    "appId": "ai.fainders.vcookposagentqa",
-    "productName": "VCO OKPOS Agent QA",
-    "directories": {
-      "output": `FAI VCO OKPOS Agent QA v${version}`
-    },
+    appId: 'ai.fainders.vcookposagentqa',
+    productName: 'VCO OKPOS Agent QA',
+    directories: {
+      output: `../FAI VCO OKPOS Agent QA v${version}`
+    }
   },
   local: {
-    "appId": "ai.fainders.vcookposagentlocal",
-    "productName": "VCO OKPOS Agent Local",
-    "directories": {
-      "output": `FAI VCO OKPOS Agent Local v${version}`
-    },
-  },
+    appId: 'ai.fainders.vcookposagentlocal',
+    productName: 'VCO OKPOS Agent Local',
+    directories: {
+      output: `../FAI VCO OKPOS Agent Local v${version}`
+    }
+  }
 };
 
 const baseConfig = {
-    "files": [
-      "dist/**",
-      "package.json"
-    ],
-     "asar": true,
-    "asarUnpack": [
-      "node_modules/koffi/build/koffi",
-      "dist/src/dll/*.dll",
-      "dist/src/dllProcess",
-      "dist/src/overlay"
-    ],
-    "extraResources": [
+  files: ['dist/**', 'package.json'],
+  asar: true,
+  asarUnpack: ['node_modules/koffi/build/koffi', 'dist/src/dll/*.dll', 'dist/src/dllProcess', 'dist/src/overlay'],
+  extraResources: [
+    {
+      from: 'src/assets',
+      to: 'assets'
+    },
+    {
+      from: 'src/package',
+      to: 'package'
+    }
+  ],
+  nsis: {
+    oneClick: true,
+    perMachine: false,
+    createDesktopShortcut: true,
+    createStartMenuShortcut: true,
+    shortcutName: config[type].productName,
+    runAfterFinish: true,
+    include: `build/nsis/${type}.nsh`
+  },
+  win: {
+    target: [
       {
-        "from": "src/assets",
-        "to": "assets"
-      },
-      {
-        "from": "src/package",
-        "to": "package"
+        target: 'nsis',
+        arch: ['ia32']
       }
     ],
-    "nsis": {
-      "oneClick": true,
-      "perMachine": false,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": config[type].productName,
-      "runAfterFinish": true,
-      "include": `build/nsis/${type}.nsh`
-    },
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "ia32"
-          ]
-        }
-      ],
-      "icon": "src/assets/app-icon.png"
-    },
-  };
-
-  module.exports = {
-    ...baseConfig,
-    ...config[type],
+    icon: 'src/assets/app-icon.png'
   }
+};
+
+module.exports = {
+  ...baseConfig,
+  ...config[type]
+};

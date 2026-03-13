@@ -1,4 +1,3 @@
-!macro customInstallMode
+!macro customInit
   StrCpy $INSTDIR "$LOCALAPPDATA\Programs\VCO OKPOS Agent Dev"
-  SetShellVarContext current
 !macroend
