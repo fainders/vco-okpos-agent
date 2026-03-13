@@ -6,7 +6,7 @@ const config = {
     appId: 'ai.fainders.vcookposagentdev',
     productName: 'VCO OKPOS Agent Dev',
     directories: {
-      output: `../FAI VCO OKPOS Agent Dev v${version}`
+      output: `FAI VCO OKPOS Agent Dev v${version}`
     },
     publish: {
       provider: 'github',
@@ -20,7 +20,7 @@ const config = {
     appId: 'ai.fainders.vcookposagent',
     productName: 'VCO OKPOS Agent',
     directories: {
-      output: `../FAI VCO OKPOS Agent v${version}`
+      output: `FAI VCO OKPOS Agent v${version}`
     },
     publish: {
       provider: 'github',
@@ -33,14 +33,14 @@ const config = {
     appId: 'ai.fainders.vcookposagentqa',
     productName: 'VCO OKPOS Agent QA',
     directories: {
-      output: `../FAI VCO OKPOS Agent QA v${version}`
+      output: `FAI VCO OKPOS Agent QA v${version}`
     }
   },
   local: {
     appId: 'ai.fainders.vcookposagentlocal',
     productName: 'VCO OKPOS Agent Local',
     directories: {
-      output: `../FAI VCO OKPOS Agent Local v${version}`
+      output: `FAI VCO OKPOS Agent Local v${version}`
     }
   }
 };
