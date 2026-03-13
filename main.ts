@@ -463,6 +463,7 @@ app.on('ready', () => {
   if (isPrd) {
     if (config.BUILD_TYPE === 'dev') {
       autoUpdater.channel = 'dev';
+      autoUpdater.allowPrerelease = true;
     }
     setupAutoUpdater();
     autoUpdater.checkForUpdates().catch((error) => {
