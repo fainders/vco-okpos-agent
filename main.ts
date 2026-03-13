@@ -35,9 +35,7 @@ function openKeySetupWindow(missingKey: boolean, invalidKey = false) {
     return;
   }
 
-  const keySetupPath = isPrd
-    ? path.join(process.resourcesPath, 'app.asar.unpacked', 'dist', 'src', 'overlay', 'key-setup.html')
-    : path.join(__dirname, 'src', 'overlay', 'key-setup.html');
+  const keySetupPath = isPrd ? path.join(process.resourcesPath, 'app.asar.unpacked', 'dist', 'src', 'overlay', 'key-setup.html') : path.join(__dirname, 'src', 'overlay', 'key-setup.html');
 
   keySetupWindow = new BrowserWindow({
     width: 420,
@@ -47,8 +45,8 @@ function openKeySetupWindow(missingKey: boolean, invalidKey = false) {
     title: '인증 키 설정',
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false,
-    },
+      contextIsolation: false
+    }
   });
 
   keySetupWindow.setMenu(null);
@@ -58,7 +56,7 @@ function openKeySetupWindow(missingKey: boolean, invalidKey = false) {
     keySetupWindow?.webContents.send('init-key-setup', {
       currentKey: hasApiKey() ? getApiKey() : '',
       missingKey,
-      invalidKey,
+      invalidKey
     });
   });
 
@@ -80,7 +78,7 @@ function setupAutoUpdater() {
     logger.info('[Updater] Update available:', info.version);
     new Notification({
       title: 'VCO OKPOS Agent 업데이트',
-      body: `새 버전(v${info.version})을 다운로드하고 있습니다. 완료 후 자동으로 재시작됩니다.`,
+      body: `새 버전(v${info.version})을 다운로드하고 있습니다. 완료 후 자동으로 재시작됩니다.`
     }).show();
   });
 
@@ -124,9 +122,7 @@ function computeTrayStatus(): 'connected' | 'disconnected' {
 function applyTrayStatus() {
   const connected = computeTrayStatus() === 'connected';
   const iconName = connected ? 'app-icon.png' : 'app-icon-negative.png';
-  const iconPath = isPrd
-    ? path.join(process.resourcesPath, 'assets', iconName)
-    : path.join(__dirname, 'assets', iconName);
+  const iconPath = isPrd ? path.join(process.resourcesPath, 'assets', iconName) : path.join(__dirname, 'assets', iconName);
 
   tray?.setImage(iconPath);
 
@@ -285,11 +281,7 @@ function createOverlayWindow() {
     const cursor = screen.getCursorScreenPoint();
     const bounds = overlayWindow.getBounds();
     const contentWidth = computeTrayStatus() === 'connected' ? CONTENT_WIDTH_CONNECTED : CONTENT_WIDTH_DISCONNECTED;
-    const isOverContent =
-      cursor.x >= bounds.x &&
-      cursor.x < bounds.x + contentWidth &&
-      cursor.y >= bounds.y &&
-      cursor.y < bounds.y + bounds.height;
+    const isOverContent = cursor.x >= bounds.x && cursor.x < bounds.x + contentWidth && cursor.y >= bounds.y && cursor.y < bounds.y + bounds.height;
     const shouldIgnore = !isOverContent;
     if (shouldIgnore !== lastIgnoreState) {
       overlayWindow.setIgnoreMouseEvents(shouldIgnore, { forward: true });
@@ -459,11 +451,20 @@ app.on('ready', () => {
     logger.error('[Electron] Error creating tray icon:', error.message);
   }
 
-  // 자동 업데이트 설정 (패키지 빌드에서만, dev 빌드는 dev 채널 사용)
+  // 자동 업데이트 설정 (패키지 빌드에서만, 채널은 BUILD_TYPE에 따라 결정)
   if (isPrd) {
     if (config.BUILD_TYPE === 'dev') {
       autoUpdater.channel = 'dev';
-      autoUpdater.allowPrerelease = true;
+    } else if (config.BUILD_TYPE === 'qa') {
+      autoUpdater.channel = 'qa';
+    } else if (config.BUILD_TYPE === 'prd') {
+      autoUpdater.channel = 'prd';
+    }
+    // extraMetadata로 빌드 타임에 포함된 updater 전용 read-only 크레덴셜 주입
+    const pkg = require(path.join(app.getAppPath(), 'package.json'));
+    if (pkg.updaterAwsAccessKeyId && pkg.updaterAwsSecretAccessKey) {
+      process.env.AWS_ACCESS_KEY_ID = pkg.updaterAwsAccessKeyId;
+      process.env.AWS_SECRET_ACCESS_KEY = pkg.updaterAwsSecretAccessKey;
     }
     setupAutoUpdater();
     autoUpdater.checkForUpdates().catch((error) => {

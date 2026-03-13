@@ -6,3 +6,4 @@ FAI VCO OKPOS Agent*
 dist
 logs
 .env
+config.ts
