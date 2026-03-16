@@ -10,9 +10,9 @@ const config = {
     },
     publish: {
       provider: 's3',
-      bucket: 'vco-installer',
+      bucket: 'vco-okpos-agent',
       region: 'ap-northeast-2',
-      path: '/dev/vco-okpos-agent',
+      path: '/dev',
       channel: 'dev',
       acl: null,
       publishAutoUpdate: true,
@@ -27,9 +27,9 @@ const config = {
     },
     publish: {
       provider: 's3',
-      bucket: 'vco-installer',
+      bucket: 'vco-okpos-agent',
       region: 'ap-northeast-2',
-      path: '/prd/vco-okpos-agent',
+      path: '/prd',
       channel: 'prd',
       acl: null,
       publishAutoUpdate: true,
@@ -44,9 +44,9 @@ const config = {
     },
     publish: {
       provider: 's3',
-      bucket: 'vco-installer',
+      bucket: 'vco-okpos-agent',
       region: 'ap-northeast-2',
-      path: '/qa/vco-okpos-agent',
+      path: '/qa',
       channel: 'qa',
       acl: null,
       publishAutoUpdate: true,
@@ -64,10 +64,6 @@ const config = {
 
 const baseConfig = {
   files: ['dist/**', 'package.json'],
-  extraMetadata: {
-    updaterAwsAccessKeyId: process.env.UPDATER_AWS_ACCESS_KEY_ID || '',
-    updaterAwsSecretAccessKey: process.env.UPDATER_AWS_SECRET_ACCESS_KEY || '',
-  },
   asar: true,
   asarUnpack: ['node_modules/koffi/build/koffi', 'dist/src/dll/*.dll', 'dist/src/dllProcess', 'dist/src/overlay'],
   extraResources: [

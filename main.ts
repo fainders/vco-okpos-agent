@@ -460,12 +460,6 @@ app.on('ready', () => {
     } else if (config.BUILD_TYPE === 'prd') {
       autoUpdater.channel = 'prd';
     }
-    // extraMetadata로 빌드 타임에 포함된 updater 전용 read-only 크레덴셜 주입
-    const pkg = require(path.join(app.getAppPath(), 'package.json'));
-    if (pkg.updaterAwsAccessKeyId && pkg.updaterAwsSecretAccessKey) {
-      process.env.AWS_ACCESS_KEY_ID = pkg.updaterAwsAccessKeyId;
-      process.env.AWS_SECRET_ACCESS_KEY = pkg.updaterAwsSecretAccessKey;
-    }
     setupAutoUpdater();
     autoUpdater.checkForUpdates().catch((error) => {
       logger.error('[Updater] checkForUpdates failed:', error.message);
