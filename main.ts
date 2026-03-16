@@ -1,16 +1,32 @@
-import { app, BrowserWindow, ipcMain, Menu, nativeImage, Notification, powerSaveBlocker, screen, Tray } from 'electron';
-import { ChildProcess, fork, Serializable, spawn } from 'child_process';
-import path from 'path';
-import { logger } from './src/logger';
-import config from './config';
-import dotenv from 'dotenv';
-import iconv from 'iconv-lite';
-import { APP_DIR, checkConfig, getApiKey, hasApiKey, setApiKey } from './src/configInfo';
-import { InterProcessMessage } from './src/dllProcess/ipcInterface';
-import { requestWithRetry } from './src/axiosInstance';
-import { setUpPollingPendingCommands } from './src/setupPolling';
-import { requestOkposInit } from './src/requestOkposInit';
-import { autoUpdater } from 'electron-updater';
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  Menu,
+  nativeImage,
+  Notification,
+  powerSaveBlocker,
+  screen,
+  Tray,
+} from "electron";
+import { ChildProcess, fork, Serializable, spawn } from "child_process";
+import path from "path";
+import { logger } from "./src/logger";
+import config from "./config";
+import dotenv from "dotenv";
+import iconv from "iconv-lite";
+import {
+  APP_DIR,
+  checkConfig,
+  getApiKey,
+  hasApiKey,
+  setApiKey,
+} from "./src/configInfo";
+import { InterProcessMessage } from "./src/dllProcess/ipcInterface";
+import { requestWithRetry } from "./src/axiosInstance";
+import { setUpPollingPendingCommands } from "./src/setupPolling";
+import { requestOkposInit } from "./src/requestOkposInit";
+import { autoUpdater } from "electron-updater";
 dotenv.config();
 
 // 단일 인스턴스 보장: 이미 실행 중이면 즉시 종료
@@ -23,9 +39,9 @@ let keySetupWindow: BrowserWindow | null = null;
 
 function buildTrayMenu() {
   const items: Electron.MenuItemConstructorOptions[] = [];
-  items.push({ label: '인증 키 설정', click: () => openKeySetupWindow(false) });
-  items.push({ type: 'separator' });
-  items.push({ label: '종료', click: () => app.quit() });
+  items.push({ label: "인증 키 설정", click: () => openKeySetupWindow(false) });
+  items.push({ type: "separator" });
+  items.push({ label: "종료", click: () => app.quit() });
   return Menu.buildFromTemplate(items);
 }
 
@@ -35,32 +51,41 @@ function openKeySetupWindow(missingKey: boolean, invalidKey = false) {
     return;
   }
 
-  const keySetupPath = isPrd ? path.join(process.resourcesPath, 'app.asar.unpacked', 'dist', 'src', 'overlay', 'key-setup.html') : path.join(__dirname, 'src', 'overlay', 'key-setup.html');
+  const keySetupPath = isPrd
+    ? path.join(
+        process.resourcesPath,
+        "app.asar.unpacked",
+        "dist",
+        "src",
+        "overlay",
+        "key-setup.html",
+      )
+    : path.join(__dirname, "src", "overlay", "key-setup.html");
 
   keySetupWindow = new BrowserWindow({
     width: 420,
     height: 310,
     resizable: false,
     alwaysOnTop: true,
-    title: '인증 키 설정',
+    title: "인증 키 설정",
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false
-    }
+      contextIsolation: false,
+    },
   });
 
   keySetupWindow.setMenu(null);
   keySetupWindow.loadFile(keySetupPath);
 
-  keySetupWindow.webContents.once('did-finish-load', () => {
-    keySetupWindow?.webContents.send('init-key-setup', {
-      currentKey: hasApiKey() ? getApiKey() : '',
+  keySetupWindow.webContents.once("did-finish-load", () => {
+    keySetupWindow?.webContents.send("init-key-setup", {
+      currentKey: hasApiKey() ? getApiKey() : "",
       missingKey,
-      invalidKey
+      invalidKey,
     });
   });
 
-  keySetupWindow.on('closed', () => {
+  keySetupWindow.on("closed", () => {
     keySetupWindow = null;
   });
 }
@@ -70,33 +95,35 @@ function setupAutoUpdater() {
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
 
-  autoUpdater.on('checking-for-update', () => {
-    logger.info('[Updater] Checking for update...');
+  autoUpdater.on("checking-for-update", () => {
+    logger.info("[Updater] Checking for update...");
   });
 
-  autoUpdater.on('update-available', (info) => {
-    logger.info('[Updater] Update available:', info.version);
+  autoUpdater.on("update-available", (info) => {
+    logger.info("[Updater] Update available:", info.version);
     new Notification({
-      title: 'VCO OKPOS Agent 업데이트',
-      body: `새 버전(v${info.version})을 다운로드하고 있습니다. 완료 후 자동으로 재시작됩니다.`
+      title: "VCO OKPOS Agent 업데이트",
+      body: `새 버전(v${info.version})을 다운로드하고 있습니다. 완료 후 자동으로 재시작됩니다.`,
     }).show();
   });
 
-  autoUpdater.on('update-not-available', () => {
-    logger.info('[Updater] Already up to date.');
+  autoUpdater.on("update-not-available", () => {
+    logger.info("[Updater] Already up to date.");
   });
 
-  autoUpdater.on('download-progress', (progress) => {
-    logger.info(`[Updater] Download progress: ${Math.round(progress.percent)}%`);
+  autoUpdater.on("download-progress", (progress) => {
+    logger.info(
+      `[Updater] Download progress: ${Math.round(progress.percent)}%`,
+    );
   });
 
-  autoUpdater.on('update-downloaded', (info) => {
-    logger.info('[Updater] Update downloaded, installing now:', info.version);
+  autoUpdater.on("update-downloaded", (info) => {
+    logger.info("[Updater] Update downloaded, installing now:", info.version);
     autoUpdater.quitAndInstall(true, true);
   });
 
-  autoUpdater.on('error', (error) => {
-    logger.error('[Updater] Error:', error.message);
+  autoUpdater.on("error", (error) => {
+    logger.error("[Updater] Error:", error.message);
   });
 }
 const isPrd = app.isPackaged === true;
@@ -112,126 +139,148 @@ let tray: Tray | null = null;
 let overlayWindow: BrowserWindow | null = null;
 let detailWindow: BrowserWindow | null = null;
 let lastDllProcessCheckTime = 0;
-let dllStatus: 'connected' | 'disconnected' = 'connected';
-let apiKeyStatus: 'valid' | 'invalid' = 'valid';
+let dllStatus: "connected" | "disconnected" = "connected";
+let apiKeyStatus: "valid" | "invalid" = "valid";
 
-function computeTrayStatus(): 'connected' | 'disconnected' {
-  return dllStatus === 'connected' && apiKeyStatus === 'valid' ? 'connected' : 'disconnected';
+function computeTrayStatus(): "connected" | "disconnected" {
+  return dllStatus === "connected" && apiKeyStatus === "valid"
+    ? "connected"
+    : "disconnected";
 }
 
 function applyTrayStatus() {
-  const connected = computeTrayStatus() === 'connected';
-  const iconName = connected ? 'app-icon.png' : 'app-icon-negative.png';
-  const iconPath = isPrd ? path.join(process.resourcesPath, 'assets', iconName) : path.join(__dirname, 'assets', iconName);
+  const connected = computeTrayStatus() === "connected";
+  const iconName = connected ? "app-icon.png" : "app-icon-negative.png";
+  const iconPath = isPrd
+    ? path.join(process.resourcesPath, "assets", iconName)
+    : path.join(__dirname, "assets", iconName);
 
   tray?.setImage(iconPath);
 
   if (connected) {
-    tray?.setToolTip('FAI VCO OKPOS Agent가 실행 중입니다.');
-    updateOverlayStatus(true, 'VCO 운영중');
-  } else if (apiKeyStatus === 'invalid') {
-    tray?.setToolTip('FAI VCO OKPOS Agent 인증 키 오류');
-    updateOverlayStatus(false, '인증 키 오류', '*인증 키가 올바르지 않습니다. 트레이에서 인증 키를 확인해주세요.');
+    tray?.setToolTip("FAI VCO OKPOS Agent가 실행 중입니다.");
+    updateOverlayStatus(true, "VCO 운영중");
+  } else if (apiKeyStatus === "invalid") {
+    tray?.setToolTip("FAI VCO OKPOS Agent 인증 키 오류");
+    updateOverlayStatus(false, "인증 키 오류", "*인증 키가 올바르지 않습니다.");
   } else {
-    tray?.setToolTip('FAI VCO OKPOS Agent 연결 끊김');
-    updateOverlayStatus(false, 'VCO 운영 불가');
+    tray?.setToolTip("FAI VCO OKPOS Agent 연결 끊김");
+    updateOverlayStatus(false, "VCO 운영 불가");
   }
 }
 
 // DLL 프로세스가 응답하지 않는 경우의 타임아웃 시간 (ms)
 const PING_TIMEOUT_MS = 15000;
 // 절전모드에서 작동하도록 설정
-const blockerId = powerSaveBlocker.start('prevent-app-suspension');
+const blockerId = powerSaveBlocker.start("prevent-app-suspension");
 
 try {
   checkConfig();
 } catch (error) {
-  logger.error('[Electron] Error in checkConfig:', error.message);
+  logger.error("[Electron] Error in checkConfig:", error.message);
   app.quit();
 }
 
 function startDllProcess() {
-  const nodePath = isPrd ? path.join(process.resourcesPath, 'package', 'node.exe') : path.join(__dirname, 'package', 'node.exe'); // node.exe 경로 설정
-  const processPath = isPrd ? path.join(process.resourcesPath, 'app.asar.unpacked', 'dist', 'src', 'dllProcess', 'okpos-process.js') : path.join(__dirname, 'src', 'dllProcess', 'okpos-process.js');
+  const nodePath = isPrd
+    ? path.join(process.resourcesPath, "package", "node.exe")
+    : path.join(__dirname, "package", "node.exe"); // node.exe 경로 설정
+  const processPath = isPrd
+    ? path.join(
+        process.resourcesPath,
+        "app.asar.unpacked",
+        "dist",
+        "src",
+        "dllProcess",
+        "okpos-process.js",
+      )
+    : path.join(__dirname, "src", "dllProcess", "okpos-process.js");
   dllProcess = spawn(nodePath, [processPath], {
-    stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+    stdio: ["pipe", "pipe", "pipe", "ipc"],
     env: {
       ...process.env,
-      NODE_ENV: isPrd ? 'production' : 'development',
+      NODE_ENV: isPrd ? "production" : "development",
       APP_DATA_DIR: APP_DIR,
-      ...config
-    }
+      ...config,
+    },
   });
-  logger.info('[Electron] DLL process started');
-  dllProcess.stdout?.on('data', (data) => {
-    logger.info('[Electron] DLL process stdout:', data.toString());
+  logger.info("[Electron] DLL process started");
+  dllProcess.stdout?.on("data", (data) => {
+    logger.info("[Electron] DLL process stdout:", data.toString());
   });
-  dllProcess.stderr?.on('data', (data) => {
-    logger.error('[Electron] DLL process stderr:', data.toString());
+  dllProcess.stderr?.on("data", (data) => {
+    logger.error("[Electron] DLL process stderr:", data.toString());
   });
-  dllProcess.on('error', (error) => {
-    logger.error('[Electron] DLL process error:', error);
+  dllProcess.on("error", (error) => {
+    logger.error("[Electron] DLL process error:", error);
   });
-  dllProcess.on('message', (msg) => {
+  dllProcess.on("message", (msg) => {
     const response = msg as InterProcessMessage;
-    if (response.type === 'log-error') {
-      logger.error('[DLL] ', ...response.data);
+    if (response.type === "log-error") {
+      logger.error("[DLL] ", ...response.data);
       return;
     }
-    if (response.type === 'log-info') {
-      logger.info('[DLL] ', ...response.data);
+    if (response.type === "log-info") {
+      logger.info("[DLL] ", ...response.data);
       return;
     }
-    if (response.type === 'log-debug') {
-      logger.debug('[DLL] ', ...response.data);
+    if (response.type === "log-debug") {
+      logger.debug("[DLL] ", ...response.data);
       return;
     }
-    if (response.type === 'msg-response' || response.type === 'msg-error' || response.type === 'msg-request') {
+    if (
+      response.type === "msg-response" ||
+      response.type === "msg-error" ||
+      response.type === "msg-request"
+    ) {
       return; // messageToDll에서 처리
     }
-    if (response.type === 'ping') {
+    if (response.type === "ping") {
       const currentTime = Date.now();
       lastDllProcessCheckTime = currentTime;
       return;
     }
-    if (response.type === 'callback') {
+    if (response.type === "callback") {
       let parsed: Serializable;
       try {
         parsed = JSON.parse(response.data);
       } catch (error) {
-        logger.error('[Electron] Error parsing callback data:', error.message);
+        logger.error("[Electron] Error parsing callback data:", error.message);
         return;
       }
       requestWithRetry(
         {
-          url: 'pos/okpos/callback',
-          method: 'POST',
+          url: "pos/okpos/callback",
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': getApiKey()
+            "Content-Type": "application/json",
+            "x-api-key": getApiKey(),
           },
-          data: parsed
+          data: parsed,
         },
         3,
-        1000
+        1000,
       ).catch((error) => {
-        logger.error('[Electron] Error sending callback to backend:', error.message);
+        logger.error(
+          "[Electron] Error sending callback to backend:",
+          error.message,
+        );
       });
       return;
     }
-    logger.warn('[Electron] Invalid message type:', response.type);
+    logger.warn("[Electron] Invalid message type:", response.type);
     return;
   });
-  dllProcess.on('exit', (code) => {
+  dllProcess.on("exit", (code) => {
     logger.warn(`[Electron] DLL process exited with code ${code}`);
     dllProcess = null;
     if (shouldRestartDllProcess) {
       setTimeout(() => {
-        logger.info('[Electron] Restarting DLL process...');
+        logger.info("[Electron] Restarting DLL process...");
         startDllProcess();
       }, 5000);
     } else {
-      logger.info('[Electron] DLL process will not be restarted.');
+      logger.info("[Electron] DLL process will not be restarted.");
     }
   });
 }
@@ -240,15 +289,24 @@ function stopDllProcess() {
   shouldRestartDllProcess = false;
   if (dllProcess) {
     const exitMessage: InterProcessMessage = {
-      type: 'exit'
+      type: "exit",
     };
     dllProcess.send(exitMessage);
-    logger.info('[Electron] Sent exit message to DLL process');
+    logger.info("[Electron] Sent exit message to DLL process");
   }
 }
 
 function createOverlayWindow() {
-  const overlayPath = isPrd ? path.join(process.resourcesPath, 'app.asar.unpacked', 'dist', 'src', 'overlay', 'overlay.html') : path.join(__dirname, 'src', 'overlay', 'overlay.html');
+  const overlayPath = isPrd
+    ? path.join(
+        process.resourcesPath,
+        "app.asar.unpacked",
+        "dist",
+        "src",
+        "overlay",
+        "overlay.html",
+      )
+    : path.join(__dirname, "src", "overlay", "overlay.html");
 
   overlayWindow = new BrowserWindow({
     width: 420,
@@ -262,11 +320,11 @@ function createOverlayWindow() {
     focusable: false,
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false
-    }
+      contextIsolation: false,
+    },
   });
 
-  overlayWindow.setAlwaysOnTop(true, 'screen-saver');
+  overlayWindow.setAlwaysOnTop(true, "screen-saver");
   overlayWindow.setIgnoreMouseEvents(true, { forward: true });
 
   // CSS 컨텐츠 너비: 연결 180px, 비연결 380px (overlay.css 기준)
@@ -280,8 +338,15 @@ function createOverlayWindow() {
     if (!overlayWindow || overlayWindow.isDestroyed()) return;
     const cursor = screen.getCursorScreenPoint();
     const bounds = overlayWindow.getBounds();
-    const contentWidth = computeTrayStatus() === 'connected' ? CONTENT_WIDTH_CONNECTED : CONTENT_WIDTH_DISCONNECTED;
-    const isOverContent = cursor.x >= bounds.x && cursor.x < bounds.x + contentWidth && cursor.y >= bounds.y && cursor.y < bounds.y + bounds.height;
+    const contentWidth =
+      computeTrayStatus() === "connected"
+        ? CONTENT_WIDTH_CONNECTED
+        : CONTENT_WIDTH_DISCONNECTED;
+    const isOverContent =
+      cursor.x >= bounds.x &&
+      cursor.x < bounds.x + contentWidth &&
+      cursor.y >= bounds.y &&
+      cursor.y < bounds.y + bounds.height;
     const shouldIgnore = !isOverContent;
     if (shouldIgnore !== lastIgnoreState) {
       overlayWindow.setIgnoreMouseEvents(shouldIgnore, { forward: true });
@@ -292,21 +357,31 @@ function createOverlayWindow() {
   overlayWindow.loadFile(overlayPath);
 
   if (!isPrd) {
-    overlayWindow.webContents.openDevTools({ mode: 'detach' });
+    overlayWindow.webContents.openDevTools({ mode: "detach" });
   }
 
-  overlayWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
-    logger.info(`[Overlay Console] ${message} (Source: ${sourceId}, Line: ${line})`);
-  });
-  overlayWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame) => {
-    logger.error(`[Overlay Load Fail] ${errorDescription} (URL: ${validatedURL}, Code: ${errorCode})`);
-  });
+  overlayWindow.webContents.on(
+    "console-message",
+    (event, level, message, line, sourceId) => {
+      logger.info(
+        `[Overlay Console] ${message} (Source: ${sourceId}, Line: ${line})`,
+      );
+    },
+  );
+  overlayWindow.webContents.on(
+    "did-fail-load",
+    (event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+      logger.error(
+        `[Overlay Load Fail] ${errorDescription} (URL: ${validatedURL}, Code: ${errorCode})`,
+      );
+    },
+  );
 
-  overlayWindow.on('closed', () => {
+  overlayWindow.on("closed", () => {
     overlayWindow = null;
   });
 
-  logger.info('[Electron] Overlay window created');
+  logger.info("[Electron] Overlay window created");
 }
 
 function createDetailWindow() {
@@ -322,8 +397,8 @@ function createDetailWindow() {
     alwaysOnTop: true,
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false
-    }
+      contextIsolation: false,
+    },
   });
 
   const detailHtml = `
@@ -384,7 +459,7 @@ function createDetailWindow() {
       <div class="info-item">
         <div class="label">상태</div>
         <div class="value">
-          <span id="status-badge" class="status-badge ${computeTrayStatus() === 'connected' ? 'status-connected' : 'status-disconnected'}">${computeTrayStatus() === 'connected' ? '정상 동작 중' : '연결 끊김'}</span>
+          <span id="status-badge" class="status-badge ${computeTrayStatus() === "connected" ? "status-connected" : "status-disconnected"}">${computeTrayStatus() === "connected" ? "정상 동작 중" : "연결 끊김"}</span>
         </div>
       </div>
       <div class="info-item">
@@ -412,57 +487,73 @@ function createDetailWindow() {
     </html>
   `;
 
-  detailWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(detailHtml)}`);
+  detailWindow.loadURL(
+    `data:text/html;charset=utf-8,${encodeURIComponent(detailHtml)}`,
+  );
 
-  detailWindow.on('closed', () => {
+  detailWindow.on("closed", () => {
     detailWindow = null;
   });
 
-  logger.info('[Electron] Detail window created');
+  logger.info("[Electron] Detail window created");
 }
 
-function updateOverlayStatus(connected: boolean, message?: string, hint?: string) {
+function updateOverlayStatus(
+  connected: boolean,
+  message?: string,
+  hint?: string,
+) {
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     const iconPath = isPrd
-      ? path.join(process.resourcesPath, 'assets', connected ? 'app-icon.png' : 'app-icon-negative.png')
-      : path.join(__dirname, 'assets', connected ? 'app-icon.png' : 'app-icon-negative.png'); // dev 모드 경로
-    overlayWindow.webContents.send('update-status', {
+      ? path.join(
+          process.resourcesPath,
+          "assets",
+          connected ? "app-icon.png" : "app-icon-negative.png",
+        )
+      : path.join(
+          __dirname,
+          "assets",
+          connected ? "app-icon.png" : "app-icon-negative.png",
+        ); // dev 모드 경로
+    overlayWindow.webContents.send("update-status", {
       connected,
-      message: message || (connected ? 'VCO 운영중' : 'VCO 운영 불가'),
+      message: message || (connected ? "VCO 운영중" : "VCO 운영 불가"),
       hint,
-      iconPath
+      iconPath,
     });
   }
   if (detailWindow && !detailWindow.isDestroyed()) {
-    detailWindow.webContents.send('update-detail-status', { connected });
+    detailWindow.webContents.send("update-detail-status", { connected });
   }
 }
 
-app.on('ready', () => {
-  logger.info('[Electron] App is ready. Starting DLL process...');
+app.on("ready", () => {
+  logger.info("[Electron] App is ready. Starting DLL process...");
 
   try {
-    const iconPath = isPrd ? path.join(process.resourcesPath, 'assets', 'app-icon.png') : path.join(__dirname, 'assets', 'app-icon.png'); // dev 모드 경로
+    const iconPath = isPrd
+      ? path.join(process.resourcesPath, "assets", "app-icon.png")
+      : path.join(__dirname, "assets", "app-icon.png"); // dev 모드 경로
 
     const trayIcon = nativeImage.createFromPath(iconPath);
     tray = new Tray(trayIcon);
     tray.setContextMenu(buildTrayMenu());
   } catch (error) {
-    logger.error('[Electron] Error creating tray icon:', error.message);
+    logger.error("[Electron] Error creating tray icon:", error.message);
   }
 
   // 자동 업데이트 설정 (패키지 빌드에서만, 채널은 BUILD_TYPE에 따라 결정)
   if (isPrd) {
-    if (config.BUILD_TYPE === 'dev') {
-      autoUpdater.channel = 'dev';
-    } else if (config.BUILD_TYPE === 'qa') {
-      autoUpdater.channel = 'qa';
-    } else if (config.BUILD_TYPE === 'prd') {
-      autoUpdater.channel = 'prd';
+    if (config.BUILD_TYPE === "dev") {
+      autoUpdater.channel = "dev";
+    } else if (config.BUILD_TYPE === "qa") {
+      autoUpdater.channel = "qa";
+    } else if (config.BUILD_TYPE === "prd") {
+      autoUpdater.channel = "prd";
     }
     setupAutoUpdater();
     autoUpdater.checkForUpdates().catch((error) => {
-      logger.error('[Updater] checkForUpdates failed:', error.message);
+      logger.error("[Updater] checkForUpdates failed:", error.message);
     });
   }
 
@@ -470,34 +561,34 @@ app.on('ready', () => {
   createOverlayWindow();
 
   // IPC 핸들러 등록
-  ipcMain.on('show-detail-window', () => {
+  ipcMain.on("show-detail-window", () => {
     createDetailWindow();
   });
 
-  ipcMain.on('request-initial-status', () => {
+  ipcMain.on("request-initial-status", () => {
     applyTrayStatus();
   });
 
-  ipcMain.on('save-api-key', (_, { key }: { key: string }) => {
+  ipcMain.on("save-api-key", (_, { key }: { key: string }) => {
     try {
       setApiKey(key);
-      logger.info('[Electron] API key saved successfully.');
-      apiKeyStatus = 'valid';
+      logger.info("[Electron] API key saved successfully.");
+      apiKeyStatus = "valid";
       keySetupWindow?.close();
       applyTrayStatus();
       requestOkposInit();
     } catch (error) {
-      logger.error('[Electron] Failed to save API key:', error.message);
+      logger.error("[Electron] Failed to save API key:", error.message);
     }
   });
 
-  ipcMain.on('cancel-key-setup', () => {
+  ipcMain.on("cancel-key-setup", () => {
     keySetupWindow?.close();
   });
 
   // API 키가 없으면 상태를 invalid로 설정 후 키 설정 창 표시
   if (!hasApiKey()) {
-    apiKeyStatus = 'invalid';
+    apiKeyStatus = "invalid";
     applyTrayStatus();
     openKeySetupWindow(true);
   } else {
@@ -506,30 +597,30 @@ app.on('ready', () => {
 
   stopPolling = setUpPollingPendingCommands(messageToDll, () => {
     // 401 수신 시: apiKeyStatus 변경 → applyTrayStatus로 아이콘/오버레이 일괄 갱신
-    logger.warn('[Electron] 401 detected — opening key setup window.');
-    apiKeyStatus = 'invalid';
+    logger.warn("[Electron] 401 detected — opening key setup window.");
+    apiKeyStatus = "invalid";
     applyTrayStatus();
     openKeySetupWindow(false, true);
   });
   startDllProcess();
 });
 
-app.on('before-quit', () => {
-  logger.info('[Electron] App is quitting. Stopping DLL process...');
+app.on("before-quit", () => {
+  logger.info("[Electron] App is quitting. Stopping DLL process...");
   powerSaveBlocker.stop(blockerId);
   stopDllProcess();
   stopPolling?.();
 });
 
-process.on('SIGINT', () => {
-  logger.info('SIGINT received, exiting...');
+process.on("SIGINT", () => {
+  logger.info("SIGINT received, exiting...");
   stopDllProcess();
   stopPolling?.();
   process.exit(0);
 });
 
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM received, exiting...');
+process.on("SIGTERM", () => {
+  logger.info("SIGTERM received, exiting...");
   stopDllProcess();
   stopPolling?.();
   process.exit(0);
@@ -541,9 +632,9 @@ setInterval(() => {
   const prevDllStatus = dllStatus;
 
   if (delay > PING_TIMEOUT_MS) {
-    dllStatus = 'disconnected';
+    dllStatus = "disconnected";
   } else {
-    dllStatus = 'connected';
+    dllStatus = "connected";
   }
 
   if (dllStatus !== prevDllStatus) {
@@ -554,44 +645,44 @@ setInterval(() => {
 export const messageToDll = (message: object): Promise<object> => {
   return new Promise((resolve, reject) => {
     if (!dllProcess || !dllProcess.connected) {
-      const errorMsg = '[Electron] DLL process is not running';
+      const errorMsg = "[Electron] DLL process is not running";
       logger.error(errorMsg);
       return reject(new Error(errorMsg));
     }
 
     const requestId = Math.random().toString(36).substring(2, 15);
-    const encoded = iconv.encode(JSON.stringify(message), 'euc-kr');
+    const encoded = iconv.encode(JSON.stringify(message), "euc-kr");
 
     const messageWithId: InterProcessMessage = {
-      data: encoded.toString('latin1'), // ipc간 데이터 보존을 위해 latin1로 인코딩
+      data: encoded.toString("latin1"), // ipc간 데이터 보존을 위해 latin1로 인코딩
       id: requestId,
-      type: 'msg-request'
+      type: "msg-request",
     };
 
     const handler = (msg: InterProcessMessage) => {
-      if (msg.type !== 'msg-response' && msg.type !== 'msg-error') return;
+      if (msg.type !== "msg-response" && msg.type !== "msg-error") return;
       if (msg.id !== requestId) return;
-      dllProcess?.off('message', handler);
+      dllProcess?.off("message", handler);
       clearTimeout(timeout);
-      if (msg.type === 'msg-error') {
+      if (msg.type === "msg-error") {
         return reject(new Error(msg.data));
       }
       return resolve(msg.data);
     };
 
-    dllProcess.on('message', handler);
+    dllProcess.on("message", handler);
 
     const timeout = setTimeout(() => {
-      dllProcess?.off('message', handler);
-      reject(new Error('Timeout: No response from DLL within 5 seconds'));
+      dllProcess?.off("message", handler);
+      reject(new Error("Timeout: No response from DLL within 5 seconds"));
     }, 10000);
 
     try {
       dllProcess.send(messageWithId);
     } catch (err) {
-      dllProcess?.off('message', handler);
+      dllProcess?.off("message", handler);
       clearTimeout(timeout);
-      return reject(new Error('DLL process send failed'));
+      return reject(new Error("DLL process send failed"));
     }
   });
 };
