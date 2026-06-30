@@ -49,6 +49,7 @@ yarn start
 | `yarn build:qa` | QA | QA 빌드 (인스톨러만 생성) |
 | `yarn build:prd` | Prd | 운영 빌드 (인스톨러만 생성) |
 | `yarn publish:dev` | Dev | Dev 빌드 + S3 배포 |
+| `yarn publish:qa` | QA | QA 빌드 + S3 배포 |
 | `yarn publish:prd` | Prd | 운영 빌드 + S3 배포 |
 
 ### 빌드 출력
@@ -67,7 +68,7 @@ yarn start
 - `windows-latest` 러너 + Node 20(Electron 33 내장 런타임과 일치)에서 실행
 - 입력값
   - `build_type`: `dev` / `qa` / `prd`
-  - `publish`: 체크 시 S3 자동 업데이트 채널까지 배포 (`publish:qa`는 미정의 — `dev`/`prd`만 가능)
+  - `publish`: 체크 시 S3 자동 업데이트 채널까지 배포 (`dev`/`qa`/`prd` 모두 지원)
 - **결과물**: publish 여부와 무관하게 NSIS 인스톨러(`.exe`, `.yml`, `.blockmap`)가 워크플로 실행 페이지의 **Artifacts**로 업로드됨 (기본 90일 보관)
 
 #### 필요한 저장소 시크릿 (publish 사용 시)
