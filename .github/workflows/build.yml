@@ -1,0 +1,50 @@
+name: Build OKPOS Agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: Build environment
+        type: choice
+        options: [dev, qa, prd]
+        default: dev
+      publish:
+        description: Publish to S3
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Enable Corepack (yarn 1.22.22)
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        if: ${{ !inputs.publish }}
+        run: yarn build:${{ inputs.build_type }}
+
+      - name: Build and publish to S3
+        if: ${{ inputs.publish }}
+        run: yarn publish:${{ inputs.build_type }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vco-okpos-agent-${{ inputs.build_type }}
+          path: |
+            FAI VCO OKPOS Agent*/*.exe
+            FAI VCO OKPOS Agent*/*.yml
+            FAI VCO OKPOS Agent*/*.blockmap
+          if-no-files-found: error
